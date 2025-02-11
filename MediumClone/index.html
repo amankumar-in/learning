@@ -1,73 +1,151 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aman Medium Clone - Coding Blocks</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <nav class="nav">
-      <nav class="nav-left">
-        <span class="logo"><img src="assets/logo.svg" alt="logo" /></span>
-        <span class="search-box">
-          <img src="assets/search-icon.svg" alt="search" />
-          <span class="search-placeholder">Search</span>
-        </span>
-      </nav>
-      <div class="nav-right">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aman Medium Clone - Coding Blocks</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <nav class="nav">
+    <nav class="nav-left">
+      <span class="logo"><img src="assets/logo.svg" alt="logo" /></span>
+      <span class="search-box">
         <img src="assets/search-icon.svg" alt="search" />
-        <span>Write</span>
-        <img src="assets/search-icon.svg" alt="search" />
-        <img src="assets/search-icon.svg" alt="search" />
-      </div>
+        <input type="search" id="searchinput" name="search" placeholder="Search" />
+      </span>
     </nav>
-    <div class="sticky-message"></div>
-    <main class="main-area">
-      <section class="main-content">
-        <div class="sticky-tabs"></div>
-        <div class="content-list">
-          <div class="blog-card">
-            <div class="blog-details">
-              <img src="#" alt="profile" class="writer-profile icon" />
-              <span class="author">
-                Zulie Writes In Zulie Writes by Zulie Rane
-              </span>
+    <div class="nav-right">
+      <div class="write"><img src="assets/write.svg" alt="Write" />
+        <span>Write</span></div>
 
-              <h2 class="title">How 60 minutes a day can change your life</h2>
+      <img src="assets/bell.svg" alt="Notification" />
+      <img src="assets/user.svg" alt="user" style="width: 30px;" />
+    </div>
+  </nav>
+  <div class="sticky-message"></div>
+  <main class="main-area">
+    <section class="main-content">
+      <div class="sticky-tabs"></div>
+      <div class="content-list">
+        <div class="blog-card">
+          <div class="blog-details">
+            <div class="author"><img src="assets/profile-icon.svg" alt="profile" class="writer-profile icon" />
+              <span>
+                In Javascript in Plain English by Irfan Khan
+              </span></div>
 
-              <span class="description">
-                A space-separated list of the classes of the element.
-              </span>
-              <div class="interactions">
-                <div class="left-icons">
-                  <img src="#" alt="For members only" class="premium icon" />
-                  <span class="blog-date">Dec17, 2023</span>
-                  <div class="likes">
-                    <img src="#" alt="Date" class="hand icon" />
-                    <span class="like-count">28K</span>
-                  </div>
-                  <div class="comments">
-                    <img src="#" alt="Comments" class="comment icon" />
-                    <span class="comment-count">817</span>
-                  </div>
+            <h2 class="title">How 60 minutes a day can change your life </h2>
+
+            <p class="description">
+              A space-separated list of the classes of the element.
+            </p>
+            <div class="interactions">
+              <div class="left-icons">
+                <img src="assets/premium.svg" alt="For members only" class="premium icon tooltip" />
+
+                <span class="blog-date" style="margin-right: 10px;">Dec17, 2023</span>
+                <div class="likes">
+                  <img src="assets/like.svg" alt="Date" class="hand icon tooltip" />
+                  <span class="like-count">28K</span>
                 </div>
-                <div class="right-icons">
-                  <img src="#" alt="Hide" class="hide icon" />
-                  <img src="#" alt="Save" class="save icon" />
-                  <img src="#" alt="Options" class="option icon" />
+                <div class="comments">
+                  <img src="assets/comment.svg" alt="Comments" class="comment icon tooltip" />
+                  <span class="comment-count">817</span>
                 </div>
               </div>
-            </div>
-            <div class="blog-image">
-              <img src="assets/blogimage.jpg" alt="" />
+              <div class="right-icons">
+                <img src="assets/hide.svg" alt="Hide" class="hide icon tooltip" />
+                <img src="assets/save.svg" alt="Save" class="save icon tooltip" />
+                <img src="assets/option.svg" alt="Options" class="option icon tooltip" />
+              </div>
             </div>
           </div>
+          <div class="blog-image-container">
+            <img src="assets/blogimage.jpg" alt="" width="180px" class="blog-image" />
+          </div>
         </div>
-      </section>
-      <aside class="right-sidebar">
-        <section class="sticky-sidebar"></section>
-      </aside>
-    </main>
-  </body>
+        <div class="blog-card">
+          <div class="blog-details">
+            <div class="author"><img src="assets/user3.svg" alt="profile" class="writer-profile icon" />
+              <span>
+                In Javascript in Plain English by Irfan Khan
+              </span></div>
+
+            <h2 class="title">How 60 minutes a day can change your life </h2>
+
+            <p class="description">
+              A space-separated list of the classes of the element.
+            </p>
+            <div class="interactions">
+              <div class="left-icons">
+                <img src="assets/premium.svg" alt="For members only" class="premium icon tooltip" />
+
+                <span class="blog-date" style="margin-right: 10px;">Dec17, 2023</span>
+                <div class="likes">
+                  <img src="assets/like.svg" alt="Date" class="hand icon tooltip" />
+                  <span class="like-count">28K</span>
+                </div>
+                <div class="comments">
+                  <img src="assets/comment.svg" alt="Comments" class="comment icon tooltip" />
+                  <span class="comment-count">817</span>
+                </div>
+              </div>
+              <div class="right-icons">
+                <img src="assets/hide.svg" alt="Hide" class="hide icon tooltip" />
+                <img src="assets/save.svg" alt="Save" class="save icon tooltip" />
+                <img src="assets/option.svg" alt="Options" class="option icon tooltip" />
+              </div>
+            </div>
+          </div>
+          <div class="blog-image-container">
+            <img src="assets/blogimage.jpg" alt="" width="180px" class="blog-image" />
+          </div>
+        </div>
+      </div>
+    </section>
+    <aside class="right-sidebar">
+      <h4 style="margin-bottom: 25px;">Staff Picks </h4>
+      <div class="staff-picks">
+
+        <div class="author"><img src="assets/profile-icon.svg" alt="profile" class="writer-profile icon" />
+          <span>
+            Irfan Khan
+          </span></div>
+        <h3 class="smalltitle" style="margin-bottom: 15px;">
+          I was working at the Capitol during the Jan. 6 riots. Here’s what I think.
+        </h3>
+        <span class="blog-date">3d ago</span>
+      </div>
+      <div class="staff-picks">
+
+        <div class="author"><img src="assets/user1.svg" alt="profile" class="writer-profile icon" />
+          <span>
+            Phil Schwarz
+          </span></div>
+        <h3 class="smalltitle" style="margin-bottom: 15px;">
+          Advice to the Living from People Who are Dying
+        </h3>
+        <span class="blog-date">3d ago</span>
+      </div>
+      <div class="staff-picks">
+
+        <div class="author"><img src="assets/user2.svg" alt="profile" class="writer-profile icon" />
+          <span>
+            Joshua Samuel
+          </span></div>
+        <h3 class="smalltitle" style="margin-bottom: 15px;">
+          Palisades Fire: One Month Later
+        </h3>
+        <span class="blog-date">3d ago</span>
+      </div>
+      <span style="font-size: 14px; color: #686868; font-weight: 300;">See the full list</span>
+
+      <section class="sticky-sidebar"></section>
+    </aside>
+  </main>
+</body>
+
 </html>
