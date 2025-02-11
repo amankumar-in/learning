@@ -95,19 +95,6 @@ body {
   color: white;
 }
 
-/* Media query to show hamburger and hide desktop nav-right on small screens */
-@media screen and (max-width: 768px) {
-  .nav-right {
-    display: none !important;
-    /* Force hide the right nav icons */
-  }
-
-  .hamburger-menu {
-    display: block;
-    /* Ensure hamburger menu is visible */
-  }
-}
-
 .nav-left {
   align-items: center;
   display: flex;
@@ -239,12 +226,6 @@ p {
   gap: 20px;
 }
 
-@media screen and (max-width: 768px) {
-  .right-icons {
-    display: none;
-  }
-}
-
 .icon {
   margin-right: 5px;
   width: 20px;
@@ -370,4 +351,24 @@ h6 {
 .links {
   color: #7f7e7e;
   font-size: 13px;
+}
+
+/* @media screen and (max-width: 768px) {
+  .right-icons {
+    display: none;
+  }
+} */
+
+/* Media query to show hamburger and hide desktop nav-right on small screens */
+@media screen and (max-width: 768px) {
+  .nav-right,
+  .right-icons {
+    display: none !important;
+    /* Force hide the right nav icons */
+  }
+
+  .hamburger-menu {
+    display: block;
+    /* Ensure hamburger menu is visible */
+  }
 }
