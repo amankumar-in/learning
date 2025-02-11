@@ -2,9 +2,12 @@ body {
   min-height: 100vh;
 }
 
+
+
 .search-box {
   background-color: #f6f6f6;
-  width: 300px;
+  width: 100%;
+  max-width: 300px;
   display: inline-flex;
   align-items: center;
   padding: 10px 15px;
@@ -47,13 +50,68 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: rgb(255, 255, 255);
-
+  background-color: #fff;
   min-height: 50px;
   padding: 5px 20px;
-  border-bottom: 1px solid;
-  border-color: rgb(234, 234, 234);
+  border-bottom: 1px solid rgb(234, 234, 234);
 }
+
+/* Hamburger menu icon styling */
+.hamburger-menu {
+  display: none;
+  /* Hidden by default */
+  cursor: pointer;
+  font-size: 28px;
+  padding: 10px;
+}
+
+/* Mobile navigation overlay styling */
+.mobile-nav {
+  height: 100%;
+  width: 0;
+  /* Keep it hidden initially */
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  right: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  transition: 0.3s;
+  padding-top: 60px;
+}
+
+.mobile-nav .closebtn {
+  position: absolute;
+  top: 20px;
+  right: 25px;
+  font-size: 36px;
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.mobile-nav-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  color: white;
+}
+
+/* Media query to show hamburger and hide desktop nav-right on small screens */
+@media screen and (max-width: 768px) {
+  .nav-right {
+    display: none !important;
+    /* Force hide the right nav icons */
+  }
+
+  .hamburger-menu {
+    display: block;
+    /* Ensure hamburger menu is visible */
+  }
+}
+
+
 
 .nav-left {
   align-items: center;
@@ -73,7 +131,8 @@ body {
 .main-area {
   padding-left: 20px;
   padding-right: 20px;
-  width: 1140px;
+  width: 100%;
+  max-width: 1140px;
   display: flex;
   margin: auto;
   /* background-color: beige; */
@@ -94,8 +153,19 @@ body {
 
   border-right: 1px solid;
   border-color: #eaeaea;
+}
 
+/* Hide sidebar on small display */
+@media screen and (max-width: 768px) {
+  .right-sidebar {
+    display: none;
+  }
 
+  .main-content {
+    width: 100%;
+    padding-right: 0;
+    border-right: none;
+  }
 }
 
 .right-sidebar {

@@ -18,3 +18,12 @@ function openCity(evt, cityName) {
     document.getElementById(cityName).style.display = "block";
     evt.currentTarget.className += " active";
 }
+
+function toggleMobileMenu() {
+    var mobileNav = document.getElementById("mobileNav");
+    if (mobileNav.style.width === "250px") {
+        mobileNav.style.width = "0";
+    } else {
+        mobileNav.style.width = "250px"; // Adjust width as needed
+    }
+}

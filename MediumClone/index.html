@@ -18,12 +18,28 @@
         <input type="search" id="searchinput" name="search" placeholder="Search" />
       </span>
     </nav>
+    <!-- Desktop nav right -->
     <div class="nav-right">
       <div class="write"><img src="assets/write.svg" alt="Write" />
         <span>Write</span></div>
 
       <img src="assets/bell.svg" alt="Notification" />
       <img src="assets/user.svg" alt="user" style="width: 30px;" />
+    </div>
+    <!-- Mobile right nav -->
+    <!-- Hamburger menu icon (visible on small screens) -->
+    <div class="hamburger-menu" onclick="toggleMobileMenu()">&#9776;</div>
+
+    <div id="mobileNav" class="mobile-nav">
+      <a href="javascript:void(0)" class="closebtn" onclick="toggleMobileMenu()">&times;</a>
+      <div class="mobile-nav-content">
+        <div class="write">
+          <img src="assets/write.svg" alt="Write" />
+          <span>Write</span>
+        </div>
+        <img src="assets/bell.svg" alt="Notification" />
+        <img src="assets/user.svg" alt="User" style="width: 30px;" />
+      </div>
     </div>
   </nav>
   <div class="sticky-message"></div>
