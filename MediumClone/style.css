@@ -153,10 +153,6 @@ body {
   padding-top: 40px;
 }
 
-.blog-image {
-  max-width: 90%;
-}
-
 h1,
 h2,
 h3,
@@ -170,7 +166,7 @@ span {
 
 .blog-card {
   display: flex;
-  gap: 60px;
+  gap: 5%;
   justify-content: space-between;
   align-items: center;
   padding: 30px 10px;
@@ -181,7 +177,10 @@ span {
 .blog-details {
   width: 70%;
 }
-
+.blog-image {
+  width: 100%;
+  max-width: 200px;
+}
 .author {
   margin-bottom: 15px;
   display: flex;
