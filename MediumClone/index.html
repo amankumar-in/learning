@@ -47,17 +47,18 @@
   <main class="main-area">
     <section class="main-content">
       <div class="sticky-tabs tab">
-        <button class="tablinks" onclick="openCity(event, 'London')">
-          <img src="assets/plus.svg" alt="" />
+        <button class="tablinks" onclick="openCity(event, 'plus')"><a href="suggestions.html">
+            <img src="assets/plus.svg" alt="" /></a>
         </button>
-        <button class="tablinks" onclick="openCity(event, 'Paris')">
+        <button class="tablinks" onclick="openCity(event, 'for-you')">
           For You
         </button>
-        <button class="tablinks" onclick="openCity(event, 'Tokyo')">
+        <button class="tablinks" onclick="openCity(event, 'following')">
           Following
         </button>
       </div>
-      <div class="content-list">
+      <!-- For You Content -->
+      <div class="content-list tabcontent" id="for-you">
         <div class="blog-card">
           <div class="blog-details">
             <div class="author">
@@ -428,6 +429,240 @@
             <img src="assets/blogpic5.jpeg" alt="" width="180px" class="blog-image" />
           </div>
         </div>
+      </div>
+      <!-- Following Content -->
+      <div class="content-list tabcontent" id="following">
+
+
+
+        <div class="blog-card">
+          <div class="blog-details">
+            <div class="author">
+              <img src="assets/user1.svg" alt="profile" class="writer-profile icon" />
+              <span> In Gaming in Plain English by MKBHD </span>
+            </div>
+
+            <h2 class="title">20 Best Games of 2024</h2>
+
+            <p class="description">
+              A space-separated list of the classes of the element.
+            </p>
+            <div class="interactions">
+              <div class="left-icons">
+                <img src="assets/premium2.svg" alt="For members only" class="premium icon tooltip" />
+
+                <span class="blog-date" style="margin-right: 10px">Dec17, 2023</span>
+                <div class="likes">
+                  <img src="assets/like.svg" alt="Date" class="hand icon tooltip" />
+                  <span class="like-count">28K</span>
+                </div>
+                <div class="comments">
+                  <img src="assets/comment.svg" alt="Comments" class="comment icon tooltip" />
+                  <span class="comment-count">817</span>
+                </div>
+              </div>
+              <div class="right-icons">
+                <img src="assets/hide.svg" alt="Hide" class="hide icon tooltip" />
+                <img src="assets/save.svg" alt="Save" class="save icon tooltip" />
+                <img src="assets/option.svg" alt="Options" class="option icon tooltip" />
+              </div>
+            </div>
+          </div>
+          <div class="blog-image-container">
+            <img src="assets/blogpic3.jpg" alt="" width="180px" class="blog-image" />
+          </div>
+        </div>
+
+        <div class="blog-card">
+          <div class="blog-details">
+            <div class="author">
+              <img src="assets/user4.svg" alt="profile" class="writer-profile icon" />
+              <span> In Javascript in Plain English by Joshua Samuel </span>
+            </div>
+
+            <h2 class="title">How To travel Around the World in 80 Days</h2>
+
+            <p class="description">
+              A space-separated list of the classes of the element.
+            </p>
+            <div class="interactions">
+              <div class="left-icons">
+                <img src="assets/premium2.svg" alt="For members only" class="premium icon tooltip" />
+
+                <span class="blog-date" style="margin-right: 10px">Dec17, 2023</span>
+                <div class="likes">
+                  <img src="assets/like.svg" alt="Date" class="hand icon tooltip" />
+                  <span class="like-count">28K</span>
+                </div>
+                <div class="comments">
+                  <img src="assets/comment.svg" alt="Comments" class="comment icon tooltip" />
+                  <span class="comment-count">817</span>
+                </div>
+              </div>
+              <div class="right-icons">
+                <img src="assets/hide.svg" alt="Hide" class="hide icon tooltip" />
+                <img src="assets/save.svg" alt="Save" class="save icon tooltip" />
+                <img src="assets/option.svg" alt="Options" class="option icon tooltip" />
+              </div>
+            </div>
+          </div>
+          <div class="blog-image-container">
+            <img src="assets/blogpic1.jpg" alt="" width="180px" class="blog-image" />
+          </div>
+        </div>
+
+
+        <div class="blog-card">
+          <div class="blog-details">
+            <div class="author">
+              <img src="assets/user2.svg" alt="profile" class="writer-profile icon" />
+              <span> In Social Science in Plain English by Aristotle </span>
+            </div>
+
+            <h2 class="title">The Alligory of Cave: For Dummies</h2>
+
+            <p class="description">
+              A space-separated list of the classes of the element.
+            </p>
+            <div class="interactions">
+              <div class="left-icons">
+                <img src="assets/premium2.svg" alt="For members only" class="premium icon tooltip" />
+
+                <span class="blog-date" style="margin-right: 10px">Dec17, 2023</span>
+                <div class="likes">
+                  <img src="assets/like.svg" alt="Date" class="hand icon tooltip" />
+                  <span class="like-count">28K</span>
+                </div>
+                <div class="comments">
+                  <img src="assets/comment.svg" alt="Comments" class="comment icon tooltip" />
+                  <span class="comment-count">817</span>
+                </div>
+              </div>
+              <div class="right-icons">
+                <img src="assets/hide.svg" alt="Hide" class="hide icon tooltip" />
+                <img src="assets/save.svg" alt="Save" class="save icon tooltip" />
+                <img src="assets/option.svg" alt="Options" class="option icon tooltip" />
+              </div>
+            </div>
+          </div>
+          <div class="blog-image-container">
+            <img src="assets/blogpic4.webp" alt="" width="180px" class="blog-image" />
+          </div>
+        </div>
+        <div class="blog-card">
+          <div class="blog-details">
+            <div class="author">
+              <img src="assets/user3.svg" alt="profile" class="writer-profile icon" />
+              <span> In Javascript in Plain English by Irfan Khan </span>
+            </div>
+
+            <h2 class="title">How 60 minutes a day can change your life</h2>
+
+            <p class="description">
+              A space-separated list of the classes of the element.
+            </p>
+            <div class="interactions">
+              <div class="left-icons">
+                <img src="assets/premium2.svg" alt="For members only" class="premium icon tooltip" />
+
+                <span class="blog-date" style="margin-right: 10px">Dec17, 2023</span>
+                <div class="likes">
+                  <img src="assets/like.svg" alt="Date" class="hand icon tooltip" />
+                  <span class="like-count">28K</span>
+                </div>
+                <div class="comments">
+                  <img src="assets/comment.svg" alt="Comments" class="comment icon tooltip" />
+                  <span class="comment-count">817</span>
+                </div>
+              </div>
+              <div class="right-icons">
+                <img src="assets/hide.svg" alt="Hide" class="hide icon tooltip" />
+                <img src="assets/save.svg" alt="Save" class="save icon tooltip" />
+                <img src="assets/option.svg" alt="Options" class="option icon tooltip" />
+              </div>
+            </div>
+          </div>
+          <div class="blog-image-container">
+            <img src="assets/blogpic5.jpeg" alt="" width="180px" class="blog-image" />
+          </div>
+        </div>
+        <div class="blog-card">
+          <div class="blog-details">
+            <div class="author">
+              <img src="assets/user4.svg" alt="profile" class="writer-profile icon" />
+              <span> In Javascript in Plain English by Joshua Samuel </span>
+            </div>
+
+            <h2 class="title">How To travel Around the World in 80 Days</h2>
+
+            <p class="description">
+              A space-separated list of the classes of the element.
+            </p>
+            <div class="interactions">
+              <div class="left-icons">
+                <img src="assets/premium2.svg" alt="For members only" class="premium icon tooltip" />
+
+                <span class="blog-date" style="margin-right: 10px">Dec17, 2023</span>
+                <div class="likes">
+                  <img src="assets/like.svg" alt="Date" class="hand icon tooltip" />
+                  <span class="like-count">28K</span>
+                </div>
+                <div class="comments">
+                  <img src="assets/comment.svg" alt="Comments" class="comment icon tooltip" />
+                  <span class="comment-count">817</span>
+                </div>
+              </div>
+              <div class="right-icons">
+                <img src="assets/hide.svg" alt="Hide" class="hide icon tooltip" />
+                <img src="assets/save.svg" alt="Save" class="save icon tooltip" />
+                <img src="assets/option.svg" alt="Options" class="option icon tooltip" />
+              </div>
+            </div>
+          </div>
+          <div class="blog-image-container">
+            <img src="assets/blogpic1.jpg" alt="" width="180px" class="blog-image" />
+          </div>
+        </div>
+        <div class="blog-card">
+          <div class="blog-details">
+            <div class="author">
+              <img src="assets/user5.svg" alt="profile" class="writer-profile icon" />
+              <span> In Lifestyle in Plain English by Red Blue </span>
+            </div>
+
+            <h2 class="title">Time and Tides Wait For None</h2>
+
+            <p class="description">
+              A space-separated list of the classes of the element.
+            </p>
+            <div class="interactions">
+              <div class="left-icons">
+                <img src="assets/premium2.svg" alt="For members only" class="premium icon tooltip" />
+
+                <span class="blog-date" style="margin-right: 10px">Dec17, 2023</span>
+                <div class="likes">
+                  <img src="assets/like.svg" alt="Date" class="hand icon tooltip" />
+                  <span class="like-count">28K</span>
+                </div>
+                <div class="comments">
+                  <img src="assets/comment.svg" alt="Comments" class="comment icon tooltip" />
+                  <span class="comment-count">817</span>
+                </div>
+              </div>
+              <div class="right-icons">
+                <img src="assets/hide.svg" alt="Hide" class="hide icon tooltip" />
+                <img src="assets/save.svg" alt="Save" class="save icon tooltip" />
+                <img src="assets/option.svg" alt="Options" class="option icon tooltip" />
+              </div>
+            </div>
+          </div>
+          <div class="blog-image-container">
+            <img src="assets/blogpic2.avif" alt="" width="180px" class="blog-image" />
+          </div>
+        </div>
+
+
+
       </div>
     </section>
     <aside class="right-sidebar">

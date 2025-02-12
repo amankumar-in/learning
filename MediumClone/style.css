@@ -177,10 +177,12 @@ span {
 .blog-details {
   width: 70%;
 }
+
 .blog-image {
   width: 100%;
   max-width: 200px;
 }
+
 .author {
   margin-bottom: 15px;
   display: flex;
@@ -321,15 +323,14 @@ h6 {
 
 /* Create an active/current tablink class */
 .tab button.active {
-  background-color: #ccc;
+  color: #000000;
   border-bottom: 1px solid #000000;
 }
 
 /* Style the tab content */
 .tabcontent {
-  display: none;
-  padding: 6px 12px;
-  border: 1px solid #ccc;
+
+
   border-top: none;
 }
 
@@ -360,6 +361,7 @@ h6 {
 
 /* Media query to show hamburger and hide desktop nav-right on small screens */
 @media screen and (max-width: 768px) {
+
   .nav-right,
   .right-icons {
     display: none !important;
