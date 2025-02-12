@@ -111,13 +111,22 @@ body {
 .sticky-message {
   display: flex;
   justify-content: center;
-  align-items: center;
+
   margin: auto;
-  padding: 10px 10px;
-  font-family: 'Times New Roman', Times, serif;
-  color: #b0529f;
+  padding: 10px 6px 6px 6px;
+
   background-color: rgb(251, 207, 229);
 
+}
+
+.sticky-message p {
+  font-family: 'Times New Roman',
+    Times,
+    serif;
+  color: #b0529f;
+  font-size: 16px;
+  display: flex;
+  align-items: first baseline;
 }
 
 .closebtn {
