@@ -108,29 +108,20 @@ body {
   gap: 30px;
 }
 
-.sticky-message {
+.sticky-message p {
   display: flex;
   justify-content: center;
-
-  margin: auto;
-  padding: 10px 6px 6px 6px;
-
-  background-color: rgb(251, 207, 229);
-  font-family: Arial,
-    Helvetica,
-    sans-serif;
-  color: #b0529f;
-  font-size: 16px;
-
-}
-
-.sticky-message p {
-  font-family: Arial, Helvetica, sans-serif;
-  color: #b0529f;
-  font-size: 16px;
-  display: flex;
   align-items: first baseline;
+  margin: auto;
+  padding: 10px;
+  background-color: rgb(251, 207, 229);
+  font-family: 'Times New Roman', Times, serif;
+  color: #b0529f;
+  font-size: 16px;
+
 }
+
+
 
 .closebtn {
   margin-left: 15px;
