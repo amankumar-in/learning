@@ -111,6 +111,7 @@ body {
 .alert p {
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
   align-items: first baseline;
   margin: auto;
   padding: 10px;
@@ -121,7 +122,13 @@ body {
 
 }
 
-
+/* .alert p img {
+  display: inline-block;
+  vertical-align: middle;
+  width: 16px;
+  
+height: auto;
+} */
 
 .closebtn {
   margin-left: 15px;
