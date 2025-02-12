@@ -108,7 +108,7 @@ body {
   gap: 30px;
 }
 
-.sticky-message p {
+.alert p {
   display: flex;
   justify-content: center;
   align-items: first baseline;
