@@ -7,13 +7,13 @@ body {
 }
 
 .header {
-  margin-top: 20vw;
+  margin-top: min(60px, 5vh);
   display: flex;
   padding: 0px 20px;
   justify-content: center;
   align-items: start;
   gap: 10px;
-  margin-bottom: 20vw;
+  margin-bottom: max(200px, 5vh);
 }
 
 #result {
