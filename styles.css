@@ -1,108 +1,20 @@
 html,
 body {
-    margin: 0;
-    padding: 0;
+  margin: 0;
+  padding: 0;
 
-
-    /* Optional: prevents horizontal scroll */
+  /* Optional: prevents horizontal scroll */
 }
 
 .cutive-mono-regular {
-    font-family: "Cutive Mono", serif;
-    font-weight: 400;
-    font-style: normal;
+  font-family: "Cutive Mono", serif;
+  font-weight: 400;
+  font-style: normal;
 }
-
 
 * {
-    box-sizing: border-box;
-
+  box-sizing: border-box;
 }
-
-.info {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    margin: auto;
-    flex-direction: column;
-}
-
-.info h1 {
-    font-size: 60px;
-    margin: 0;
-    padding: 0;
-}
-
-.caption {
-    font-family: "Audiowide",
-        sans-serif;
-}
-
-blockquote {
-    text-align: center;
-
-    font-size: 16px;
-    font-family: "Cutive Mono",
-        serif;
-    font-weight: 400;
-    font-style: normal;
-}
-
-.projectgroup {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: stretch;
-
-    padding: 30px;
-    justify-content: center;
-    margin: 50px auto;
-    gap: 30px;
-
-    overflow: hidden;
-}
-
-.project {
-    width: fit-content;
-    padding: 20px;
-    border-radius: 10px;
-    display: flex;
-    position: relative;
-    justify-content: center;
-    border: 1px salmon solid;
-    box-shadow: 0px 5px salmon;
-    background-color: rgb(255, 241, 222);
-}
-
-.project:hover {
-    box-shadow: 5px 10px 5px salmon;
-}
-
-.tag {
-    position: absolute;
-    top: -10px;
-
-}
-
-.medium {
-    background-color: rgba(255, 243, 185, 0.743);
-}
-
-.projectname:hover {
-
-    padding: 20px 30px;
-    border-radius: 5px;
-    box-shadow: 10px 10px 5px rgb(195, 160, 199);
-
-}
-
-
-
-.project a {
-    color: rgb(75, 94, 110);
-    text-decoration: none;
-
-}
-
 h1,
 h2,
 h3,
@@ -113,14 +25,94 @@ span,
 p,
 div,
 a {
-    font-family: Arial, Helvetica, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+a {
+  text-decoration: none;
+  color: rgb(81, 81, 81);
+}
+.info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: auto;
+  flex-direction: column;
+}
+
+.info h1 {
+  font-size: 60px;
+  margin: 0;
+  padding: 0;
+}
+
+.caption {
+  font-family: "Audiowide", sans-serif;
+}
+
+blockquote {
+  text-align: center;
+
+  font-size: 16px;
+  font-family: "Cutive Mono", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.projectgroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  width: 100%;
+  max-width: 1000px;
+
+  padding: 30px;
+  justify-content: center;
+  margin: 50px auto;
+  gap: 30px;
+
+  overflow: hidden;
+}
+
+.project {
+  width: fit-content;
+  padding: 20px;
+  border-radius: 10px;
+  display: flex;
+  position: relative;
+  justify-content: center;
+  border: 1px salmon solid;
+  box-shadow: 0px 5px salmon;
+  background-color: rgb(255, 241, 222);
+}
+
+.project:hover {
+  box-shadow: 0px 10px 5px rgb(119, 250, 37);
 }
 
 .tag {
-    background-color: rgb(184, 184, 45);
-    border-radius: 2px;
-    font-size: 11px;
-    width: fit-content;
-    padding: 5px;
-    color: #ffffff;
+  position: absolute;
+  top: -10px;
+}
+/* Individual project styles */
+.medium {
+  background-color: rgb(255, 255, 255);
+  box-shadow: 0px 5px rgb(102, 102, 102);
+}
+
+.dicegame {
+  background-color: #bcd5ffbd;
+  box-shadow: 0px 5px #b67eff;
+}
+.dicegame a {
+  color: #564767 !important;
+}
+
+.tag {
+  background-color: rgb(184, 184, 45);
+  border-radius: 2px;
+  font-size: 11px;
+  width: fit-content;
+  padding: 5px;
+  color: #ffffff;
 }
