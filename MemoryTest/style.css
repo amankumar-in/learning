@@ -2,6 +2,8 @@ h1 {
   color: red;
   font-size: 50px;
   text-align: center;
+  font-family: "Caveat Brush";
+  cursor: pointer;
 }
 body {
   background-color: #ede3fe;

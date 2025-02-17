@@ -40,6 +40,14 @@ $(document).keypress(function () {
     started = true;
   }
 });
+// also allow to start game by clicking on the title
+$("#level-title").click(function () {
+  if (!started) {
+    $("#level-title").text("Level " + level);
+    nextSequence();
+    started = true;
+  }
+});
 
 // Handle tile clicks
 $(".tile").click(function () {
@@ -106,4 +114,3 @@ function startOver() {
   gamePattern = [];
   started = false;
 }
-
