@@ -249,7 +249,7 @@
 }
 .stack-bar {
   display: flex;
-  height: 75px;
+  min-height: 75px;
   padding: 0px 5px;
   flex-direction: column;
   align-items: flex-start;
@@ -263,24 +263,22 @@
 }
 
 .rectangle2 {
-  flex: 1 0 0;
-  align-self: stretch;
+  height: 50px;
+  width: 100%;
   border-radius: 0px 0px 3px 3px;
   background: #5654d4;
 }
 
 .rectangle3 {
-  height: 50px;
-  flex-shrink: 0;
-  align-self: stretch;
+  height: 100px;
+  width: 100%;
   border-radius: 3px 3px 0px 0px;
   background: #efefef;
 }
 
 .rectangle4 {
-  height: 61.239px;
-  /* flex-shrink: 0; */
-  align-self: stretch;
-  border-radius: 0px 0px 2.378px 2.378px;
+  height: 65px;
+  width: 100%;
+  border-radius: 0px 0px 3px 3px;
   background: #5654d4;
 }

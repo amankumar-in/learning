@@ -114,6 +114,13 @@ blockquote {
 .memorytest a {
   color: #391212 !important;
 }
+.dashboard-design {
+  background-color: #efff97bd;
+  box-shadow: 0px 5px #37b2ff;
+}
+.dashboard-design a {
+  color: #391212 !important;
+}
 
 .tag {
   background-color: rgb(184, 184, 45);
