@@ -75,8 +75,17 @@
 }
 
 .red {
+  
   color: #fc5452;
-  color: #fc5452;
+  font-family: "inter";
+  font-size: 9.513px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 9.513px; /* 100% */
+}
+.green-text {
+  
+  color: #1DBF73;
   font-family: "inter";
   font-size: 9.513px;
   font-style: normal;
