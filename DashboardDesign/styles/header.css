@@ -50,6 +50,11 @@ body {
   justify-content: space-between;
   align-items: center;
 }
+@media screen and (max-width: 562px) {
+  .header-interaction {
+    align-items: start;
+  }
+}
 .left-header,
 .right-header {
   display: flex;
