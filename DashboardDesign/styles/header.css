@@ -17,6 +17,7 @@ h1 {
 }
 body {
   background: #fafafa;
+  height: 100svh;
 }
 .main {
   width: 100%;

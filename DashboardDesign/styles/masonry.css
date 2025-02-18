@@ -282,3 +282,20 @@
   border-radius: 0px 0px 3px 3px;
   background: #5654d4;
 }
+
+.sticky {
+  position: fixed;
+  width: 100%;
+  padding: 12px;
+  text-align: center;
+  color: chocolate;
+  text-decoration: none;
+  bottom: 0;
+  z-index: 100;
+  background-color: #efefef;
+}
+a {
+  text-decoration: none;
+  color: chocolate;
+  font-weight: 600;
+}
