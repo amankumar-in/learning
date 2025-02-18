@@ -1,0 +1,170 @@
+.data-charts {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  overflow: hidden;
+  padding: 12px;
+  background: #fafafa;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 10px;
+  align-self: stretch;
+}
+
+.chart {
+  display: flex;
+  height: 154.583px;
+  min-width: 272px;
+  max-width: 300px;
+  min-height: 154.583px;
+  max-height: 154.583px;
+  overflow: hidden;
+  padding: 10.702px 13.08px 8.324px 13.08px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16.647px;
+  flex: 1 1 0;
+  border-radius: 7.135px;
+  border: 0.595px solid #eaecf0;
+  background: #fff;
+  box-shadow: 0px 3.567px 5.946px 0px rgba(177, 177, 177, 0.08),
+    0px 0.595px 1.784px 0px rgba(0, 0, 0, 0.02);
+}
+/* for mobile screen change flex direction of .data-charts to column */
+@media screen and (max-width: 768px) {
+  .data-charts {
+    flex-direction: column;
+    align-items: center;
+    /* min-width: 272px; */
+  }
+}
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+}
+.chart-header-left {
+  display: flex;
+  align-items: center;
+  gap: 4.756px;
+  color: #080808;
+  font-family: "SF Pro Text";
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 16.647px; /* 140% */
+  letter-spacing: -0.119px;
+}
+.chart-header-right {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.chart-logo {
+  width: 14.269px;
+  height: 14.269px;
+  align-items: center;
+}
+
+.red {
+  color: #fc5452;
+  color: #fc5452;
+  font-family: "SF Pro Text";
+  font-size: 9.513px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 9.513px; /* 100% */
+}
+.chart-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16.647px;
+  align-self: stretch;
+}
+.chart-main-value {
+  color: #080808;
+  font-family: "SF Pro Text";
+  font-size: 19.026px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 23.782px; /* 125% */
+  letter-spacing: -0.571px;
+}
+.data-plot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2.378px;
+  align-self: stretch;
+}
+
+.data-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.189px;
+  align-self: stretch;
+}
+
+.data-chart-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  align-self: stretch;
+}
+
+.bar-grey {
+  height: 25.186px;
+  /* width: 10px; */
+  flex: 1 0 0;
+  border-radius: 59.455px;
+  background: #efefef;
+}
+.bar1 {
+  height: 10px;
+}
+.bar2 {
+  height: 30px;
+}
+.bar3 {
+  height: 20px;
+}
+.bar4 {
+  height: 50px;
+}
+.bar4 {
+  height: 40px;
+}
+.chart-divider {
+  width: 100%;
+  height: 1px;
+  background: #e9e9e9;
+  stroke-width: 0;
+  border: 0;
+}
+.x-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2.378px;
+  align-self: stretch;
+}
+
+.label-box {
+  display: flex;
+  padding: 2.378px;
+  justify-content: center;
+  align-items: center;
+  gap: 2.378px;
+  flex: 1 0 0;
+  /* text */
+  color: #878787;
+  text-align: center;
+  font-family: "SF Pro Text";
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 11px; /* 100% */
+}
