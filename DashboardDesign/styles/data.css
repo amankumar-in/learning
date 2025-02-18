@@ -75,7 +75,6 @@
 }
 
 .red {
-  
   color: #fc5452;
   font-family: "inter";
   font-size: 9.513px;
@@ -84,8 +83,7 @@
   line-height: 9.513px; /* 100% */
 }
 .green-text {
-  
-  color: #1DBF73;
+  color: #1dbf73;
   font-family: "inter";
   font-size: 9.513px;
   font-style: normal;
@@ -176,14 +174,14 @@
   justify-content: center;
   align-items: center;
   position: absolute;
-  left: 63px;
+  left: 25%;
   top: -5px;
 }
 
 /* for mobile screen */
 @media screen and (max-width: 768px) {
   .data-tag {
-    left: 62px;
+    left: 28.2%;
   }
 }
 
