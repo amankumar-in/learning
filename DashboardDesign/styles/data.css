@@ -4,18 +4,21 @@
   flex-wrap: wrap;
   overflow: hidden;
   padding: 12px;
-  background: #fafafa;
-  justify-content: flex-start;
+
+  justify-content: space-between;
   align-items: flex-start;
   gap: 10px;
   align-self: stretch;
+}
+.data-chart-area {
+  position: relative;
 }
 
 .chart {
   display: flex;
   height: 154.583px;
-  min-width: 272px;
-  max-width: 300px;
+  min-width: 200px;
+  max-width: 272px;
   min-height: 154.583px;
   max-height: 154.583px;
   overflow: hidden;
@@ -31,17 +34,21 @@
     0px 0.595px 1.784px 0px rgba(0, 0, 0, 0.02);
 }
 /* for mobile screen change flex direction of .data-charts to column */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 576px) {
   .data-charts {
     flex-direction: column;
     align-items: center;
-    /* min-width: 272px; */
+  }
+  .chart {
+    width: 100%;
+    max-width: 550px;
   }
 }
 .chart-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  width: 100%;
+  align-items: flex-start;
   align-self: stretch;
 }
 .chart-header-left {
@@ -49,7 +56,7 @@
   align-items: center;
   gap: 4.756px;
   color: #080808;
-  font-family: "SF Pro Text";
+  font-family: Inter;
   font-size: 14px;
   font-style: normal;
   font-weight: 600;
@@ -70,7 +77,7 @@
 .red {
   color: #fc5452;
   color: #fc5452;
-  font-family: "SF Pro Text";
+  font-family: "inter";
   font-size: 9.513px;
   font-style: normal;
   font-weight: 600;
@@ -85,7 +92,7 @@
 }
 .chart-main-value {
   color: #080808;
-  font-family: "SF Pro Text";
+  font-family: "inter";
   font-size: 19.026px;
   font-style: normal;
   font-weight: 600;
@@ -105,6 +112,7 @@
   align-items: flex-end;
   gap: 1.189px;
   align-self: stretch;
+  position: relative;
 }
 
 .data-chart-area {
@@ -137,6 +145,7 @@
 .bar4 {
   height: 40px;
 }
+
 .chart-divider {
   width: 100%;
   height: 1px;
@@ -151,7 +160,100 @@
   gap: 2.378px;
   align-self: stretch;
 }
+.data-tag {
+  display: flex;
+  width: 30.368px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  left: 63px;
+  top: -5px;
+}
 
+/* for mobile screen */
+@media screen and (max-width: 768px) {
+  .data-tag {
+    left: 62px;
+  }
+}
+
+.data-tag-box {
+  display: flex;
+  padding: 0.595px 3.567px;
+  align-items: flex-start;
+  gap: 5.946px;
+  border-radius: 2.378px;
+  background: #ff9f0a;
+  /* text */
+  color: #fff;
+  font-family: "inter";
+  font-size: 8.324px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 11.891px; /* 142.857% */
+}
+.blue {
+  background: #5654d4;
+}
+.green {
+  background: #1dbf73;
+}
+.bar-orange {
+  background-color: #ff9f0a;
+}
+.bar-blue {
+  background-color: #5654d4;
+}
+.bar-green {
+  background-color: #1dbf73;
+}
+.bar-pink,
+.pink {
+  background-color: #ff0a80;
+}
+
+.bar-purple,
+.purple {
+  background-color: #d454c7;
+}
+
+.avg-tag {
+  display: flex;
+  align-items: flex-start;
+  position: absolute;
+  /* left: 13px; */
+  bottom: 25px;
+  gap: 0;
+}
+
+.avg-tag-box {
+  display: flex;
+  padding: 1.189px 1.189px 1.189px 2.378px;
+  align-items: flex-start;
+  border-radius: 2.378px 0px 0px 2.378px;
+  background: #030303;
+
+  margin: 0;
+  /* text */
+  color: #fff;
+  font-family: "inter";
+  font-size: 7.135px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 7.135px; /* 100% */
+}
+
+.avg-line {
+  height: 0;
+  width: 100%;
+  position: absolute;
+  /* right: 12.917px; */
+  bottom: 29px;
+  border-width: 0;
+
+  border-top: 1px dashed #030303;
+}
 .label-box {
   display: flex;
   padding: 2.378px;
@@ -162,8 +264,8 @@
   /* text */
   color: #878787;
   text-align: center;
-  font-family: "SF Pro Text";
-  font-size: 11px;
+  font-family: "inter";
+  font-size: 10px;
   font-style: normal;
   font-weight: 500;
   line-height: 11px; /* 100% */
