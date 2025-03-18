@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta
+      property="og:image"
+      content="https://raw.githubusercontent.com/amankumar-in/learning/refs/heads/main/assets/meta.jpg"
+    />
+    <meta
+      property="og:image:secure_url"
+      content="https://raw.githubusercontent.com/amankumar-in/learning/refs/heads/main/assets/meta.jpg"
+    />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coding Blocks Dashboard</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="logo-container">
+        <button class="mobile-menu-toggle" id="mobile-menu-toggle">☰</button>
+        <div class="logo">
+          <span>CB</span>
+        </div>
+        <h1>Coding Blocks</h1>
+      </div>
+      <nav>
+        <ul>
+          <li>
+            <a href="#" id="nav-dashboard" class="active"
+              ><span class="nav-icon">📊</span>Dashboard</a
+            >
+          </li>
+          <li>
+            <a href="#" id="nav-courses"
+              ><span class="nav-icon">📚</span>Courses</a
+            >
+          </li>
+        </ul>
+        <div class="user-menu">
+          <div class="user-avatar" id="user-menu-toggle">CB</div>
+          <div class="user-menu-dropdown" id="user-menu-dropdown">
+            <div class="user-menu-item" id="nav-profile">
+              <span class="user-menu-icon">👤</span>
+              <span>My Profile</span>
+            </div>
+            <div class="user-menu-item">
+              <span class="user-menu-icon">⚙️</span>
+              <span>Settings</span>
+            </div>
+            <div class="user-menu-divider"></div>
+            <div class="user-menu-item logout" id="nav-logout">
+              <span class="user-menu-icon">🚪</span>
+              <span>Logout</span>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Mobile menu -->
+    <div class="mobile-menu" id="mobile-menu">
+      <ul>
+        <li>
+          <a href="#" id="mobile-nav-dashboard" class="active"
+            ><span class="nav-icon">📊</span>Dashboard</a
+          >
+        </li>
+        <li>
+          <a href="#" id="mobile-nav-courses"
+            ><span class="nav-icon">📚</span>Courses</a
+          >
+        </li>
+        <li>
+          <a href="#" id="mobile-nav-profile"
+            ><span class="nav-icon">👤</span>Profile</a
+          >
+        </li>
+        <li>
+          <a href="#" id="mobile-nav-logout"
+            ><span class="nav-icon">🚪</span>Logout</a
+          >
+        </li>
+      </ul>
+    </div>
+
+    <main>
+      <!-- Content will be dynamically loaded here -->
+    </main>
+
+    <footer>
+      <p>
+        Built by Aman Kumar.
+        <a href="../index.html" style="color: bisque">View other assignments</a>
+      </p>
+    </footer>
+
+    <!-- Models -->
+    <script src="js/models/User.js"></script>
+    <script src="js/models/Course.js"></script>
+    <script src="js/models/DataStore.js"></script>
+
+    <!-- Views -->
+    <script src="js/views/LoginView.js"></script>
+    <script src="js/views/InstructorDashboardView.js"></script>
+    <script src="js/views/StudentDashboardView.js"></script>
+    <script src="js/views/CourseDetailsView.js"></script>
+    <script src="js/views/CourseCalendarView.js"></script>
+    <script src="js/views/CreateCourseView.js"></script>
+    <script src="js/views/EditCourseView.js"></script>
+    <script src="js/views/StudentCourseView.js"></script>
+    <script src="js/views/StudentCalendarView.js"></script>
+    <script src="js/views/StudentManagementView.js"></script>
+    <script src="js/views/AddClassView.js"></script>
+    <script src="js/views/UserProfileView.js"></script>
+    <script src="js/views/InstructorCoursesView.js"></script>
+    <script src="js/views/StudentCoursesView.js"></script>
+
+    <!-- Controllers -->
+    <script src="js/controllers/AuthController.js"></script>
+    <script src="js/controllers/InstructorDashboardController.js"></script>
+    <script src="js/controllers/StudentDashboardController.js"></script>
+
+    <!-- Main App -->
+    <script src="js/app.js"></script>
+  </body>
+</html>

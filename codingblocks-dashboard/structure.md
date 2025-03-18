@@ -1,0 +1,34 @@
+```
+└── 📁codingblocks-dashboard
+    └── 📁css
+        └── 📁components
+        └── style.css
+    └── 📁data
+        └── courses.json
+        └── users.json
+    └── 📁js
+        └── app.js
+        └── 📁controllers
+            └── AuthController.js
+            └── InstructorDashboardController.js
+            └── StudentDashboardController.js
+        └── 📁models
+            └── Course.js
+            └── DataStore.js
+            └── User.js
+        └── people.js
+        └── script.js
+        └── 📁views
+            └── AddClassView.js
+            └── CourseCalendarView.js
+            └── CourseDetailsView.js
+            └── CreateCourseView.js
+            └── EditCourseView.js
+            └── InstructorDashboardView.js
+            └── LoginView.js
+            └── StudentCalendarView.js
+            └── StudentCourseView.js
+            └── StudentDashboardView.js
+            └── StudentManagementView.js
+    └── index.html
+```

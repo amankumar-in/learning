@@ -1,0 +1,64 @@
+{
+  "users": [
+    {
+      "id": "t1",
+      "name": "Kartik Mathur",
+      "email": "kartik@cb.com",
+      "password": "password123",
+      "joinDate": "2021-05-10",
+      "role": "teacher",
+      "specialization": "Web Development",
+      "experience": 5
+    },
+    {
+      "id": "t2",
+      "name": "Good Assistant",
+      "email": "assistant@cb.com",
+      "password": "password123",
+      "joinDate": "2022-01-15",
+      "role": "teacher",
+      "specialization": "Data Science",
+      "experience": 7
+    },
+    {
+      "id": "a1",
+      "name": "Aman Kumar",
+      "email": "student@cb.com",
+      "password": "password123",
+      "joinDate": "2022-06-20",
+      "role": "assistant",
+      "specialization": "Frontend Development",
+      "experience": 3
+    },
+    {
+      "id": "s1",
+      "name": "Alice Johnson",
+      "email": "alice@example.com",
+      "password": "password123",
+      "joinDate": "2023-01-25",
+      "role": "student",
+      "age": 21,
+      "college": "MIT"
+    },
+    {
+      "id": "s2",
+      "name": "Bob Martin",
+      "email": "bob@example.com",
+      "password": "password123",
+      "joinDate": "2023-02-15",
+      "role": "student",
+      "age": 23,
+      "college": "Stanford"
+    },
+    {
+      "id": "s3",
+      "name": "Carol Chen",
+      "email": "carol@example.com",
+      "password": "password123",
+      "joinDate": "2023-03-10",
+      "role": "student",
+      "age": 22,
+      "college": "Harvard"
+    }
+  ]
+}

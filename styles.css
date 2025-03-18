@@ -121,7 +121,13 @@ blockquote {
 .dashboard-design a {
   color: #391212 !important;
 }
-
+.codingblocks-dashboard {
+  background-color: #ce97ffbd;
+  box-shadow: 0px 5px #ffe137;
+}
+.codingblocks-dashboard a {
+  color: #8b104e !important;
+}
 .tag {
   background-color: rgb(184, 184, 45);
   border-radius: 2px;

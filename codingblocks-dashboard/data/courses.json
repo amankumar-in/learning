@@ -1,0 +1,76 @@
+{
+  "courses": [
+    {
+      "id": "c101",
+      "name": "Web Development Fundamentals",
+      "description": "Learn the basics of HTML, CSS, and JavaScript to build responsive websites.",
+      "teacherId": "t1",
+      "assistantIds": ["a1"],
+      "studentIds": ["s1", "s2"],
+      "startDate": "2023-06-01",
+      "endDate": "2023-08-30",
+      "schedule": [
+        {"day": "Monday", "time": "10:00 - 12:00"},
+        {"day": "Wednesday", "time": "10:00 - 12:00"}
+      ],
+      "calendar": [
+        {
+          "date": "2023-06-05",
+          "topic": "Introduction to HTML",
+          "attendance": {"s1": true, "s2": true}
+        },
+        {
+          "date": "2023-06-07",
+          "topic": "CSS Basics",
+          "attendance": {"s1": true, "s2": false}
+        },
+        {
+          "date": "2023-06-12",
+          "topic": "JavaScript Fundamentals",
+          "attendance": {"s1": true, "s2": true}
+        },
+        {
+          "date": "2023-06-14",
+          "topic": "DOM Manipulation",
+          "attendance": {"s1": false, "s2": true}
+        }
+      ]
+    },
+    {
+      "id": "c102",
+      "name": "Data Science with Python",
+      "description": "Learn data analysis, visualization, and machine learning using Python.",
+      "teacherId": "t2",
+      "assistantIds": [],
+      "studentIds": ["s2", "s3"],
+      "startDate": "2023-07-01",
+      "endDate": "2023-09-30",
+      "schedule": [
+        {"day": "Tuesday", "time": "14:00 - 16:00"},
+        {"day": "Thursday", "time": "14:00 - 16:00"}
+      ],
+      "calendar": [
+        {
+          "date": "2023-07-04",
+          "topic": "Python Basics",
+          "attendance": {"s2": true, "s3": true}
+        },
+        {
+          "date": "2023-07-06",
+          "topic": "NumPy and Pandas",
+          "attendance": {"s2": true, "s3": true}
+        },
+        {
+          "date": "2023-07-11",
+          "topic": "Data Visualization",
+          "attendance": {"s2": false, "s3": true}
+        },
+        {
+          "date": "2023-07-13",
+          "topic": "Intro to Machine Learning",
+          "attendance": {"s2": true, "s3": false}
+        }
+      ]
+    }
+  ]
+}
