@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 });
 
 // Set up navigation event listeners
-function setupNavigation() {
+window.setupNavigation = function () {
   // Desktop navigation
   const navDashboard = document.getElementById("nav-dashboard");
   const navCourses = document.getElementById("nav-courses");
@@ -214,7 +214,7 @@ function setupNavigation() {
       });
     }
   }
-}
+};
 
 // Navigate to dashboard based on user role
 function navigateToDashboard(user) {
