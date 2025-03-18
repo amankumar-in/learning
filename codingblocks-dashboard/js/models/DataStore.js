@@ -77,7 +77,7 @@ class DataStore {
           {
             id: "t2",
             name: "Good Assistant",
-            email: "assistant@cb.com",
+            email: "teacher@cb.com",
             password: "password123",
             joinDate: "2022-01-15",
             role: "teacher",
@@ -87,7 +87,7 @@ class DataStore {
           {
             id: "a1",
             name: "Aman Kumar",
-            email: "student@cb.com",
+            email: "assistant@cb.com",
             password: "password123",
             joinDate: "2022-06-20",
             role: "assistant",
@@ -96,8 +96,8 @@ class DataStore {
           },
           {
             id: "s1",
-            name: "Alice Johnson",
-            email: "alice@example.com",
+            name: "Aman Kumar",
+            email: "student@cb.com",
             password: "password123",
             joinDate: "2023-01-25",
             role: "student",
