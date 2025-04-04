@@ -50,66 +50,64 @@ function updateResultsUI(
  * @param {Object} budgetResults Budget allocation results
  * @param {Object} retirementResults Retirement planning results
  */
+// In updateSummaryMetrics function in ui.js
 function updateSummaryMetrics(userData, budgetResults, retirementResults) {
-  // Update monthly budget value
+  // Update monthly income value (renamed from "budget")
   document.getElementById("monthly-budget-value").textContent = formatCurrency(
-    budgetResults.total_budget
+    userData.monthlyIncome
   );
 
-  // Update retirement corpus value
-  document.getElementById("retirement-corpus-value").textContent =
-    formatCurrency(retirementResults.total_corpus_required);
+  // New label for the first card to clarify it's income
+  const budgetLabel = document.querySelector(
+    ".dashboard-summary .metric-card:nth-child(1) h3"
+  );
+  if (budgetLabel) budgetLabel.textContent = "Monthly Income";
 
-  // Update retirement age display
-  document.getElementById("retirement-age-display").textContent =
-    userData.retirementAge;
+  // Update retirement corpus with BOTH target and projected values
+  document.getElementById("retirement-corpus-value").innerHTML = `
+    <div>${formatCurrency(retirementResults.total_corpus_required)}</div>
+    <div class="text-sm font-normal ${
+      retirementResults.additional_corpus_needed > 0
+        ? "text-yellow-600"
+        : "text-green-600"
+    }">
+      Projected: ${formatCurrency(
+        retirementResults.future_value_of_current_savings +
+          calculateFutureSavedAmount(
+            retirementResults.recommended_monthly_savings,
+            retirementResults.pre_retirement_return,
+            userData.retirementAge - userData.age
+          )
+      )}
+    </div>
+  `;
 
-  // Update monthly savings values
-  // Check if there's a cap being applied
-  const isCapped =
-    retirementResults.required_monthly_savings >
-    retirementResults.recommended_monthly_savings;
-
-  // If capped, show both values
-  if (isCapped) {
-    document.getElementById(
-      "monthly-savings-value"
-    ).innerHTML = `<span class="text-yellow-600">${formatCurrency(
+  // Update monthly savings card with clearer language
+  document.getElementById("monthly-savings-value").innerHTML = `
+    <div>${formatCurrency(retirementResults.recommended_monthly_savings)}</div>
+    <div class="text-xs ${
+      retirementResults.required_monthly_savings >
       retirementResults.recommended_monthly_savings
-    )}</span>
-       <span class="text-xs block">(need: ${formatCurrency(
-         retirementResults.required_monthly_savings
-       )})</span>`;
-  } else {
-    document.getElementById("monthly-savings-value").textContent =
-      formatCurrency(retirementResults.recommended_monthly_savings);
-  }
+        ? "text-yellow-600"
+        : ""
+    }">
+      Ideal: ${formatCurrency(retirementResults.required_monthly_savings)}
+    </div>
+  `;
 
-  // Update savings percentage with similar treatment
-  const savingsRate =
-    (retirementResults.recommended_monthly_savings / userData.monthlyIncome) *
-    100;
-  const requiredRate =
-    (retirementResults.required_monthly_savings / userData.monthlyIncome) * 100;
-
-  if (isCapped) {
-    document.getElementById(
-      "savings-percent"
-    ).innerHTML = `<span>${savingsRate.toFixed(1)}% of income</span>
-       <span class="text-xs block">(need: ${requiredRate.toFixed(1)}%)</span>`;
-  } else {
-    document.getElementById(
-      "savings-percent"
-    ).textContent = `${savingsRate.toFixed(1)}% of income`;
-  }
-
-  // Update retirement readiness indicator if present
-  if (document.getElementById("retirement-readiness")) {
-    const readiness = retirementResults.retirement_readiness;
-    document.getElementById(
-      "retirement-readiness"
-    ).textContent = `${readiness.score}/100 (${readiness.status})`;
-  }
+  // Update percentage explanation
+  document.getElementById("savings-percent").innerHTML = `
+    <div>${(
+      (retirementResults.recommended_monthly_savings / userData.monthlyIncome) *
+      100
+    ).toFixed(1)}% of income</div>
+    <div class="text-xs">
+      Ideal: ${(
+        (retirementResults.required_monthly_savings / userData.monthlyIncome) *
+        100
+      ).toFixed(1)}%
+    </div>
+  `;
 }
 
 /**
@@ -275,6 +273,47 @@ function showIncomeTierInfo(incomeTier) {
   document.getElementById("close-modal").addEventListener("click", () => {
     document.body.removeChild(modal);
   });
+}
+
+// Add this function to ui.js
+function addRetirementExplanationSection() {
+  const retirementTab = document.getElementById("retirement-tab");
+  if (!retirementTab) return;
+
+  // Create explanation section if it doesn't exist
+  let explanationSection = document.getElementById("retirement-explanation");
+  if (!explanationSection) {
+    explanationSection = document.createElement("div");
+    explanationSection.id = "retirement-explanation";
+    explanationSection.className = "panel mt-6";
+
+    explanationSection.innerHTML = `
+      <h3 class="panel-title">Understanding Your Retirement Plan</h3>
+      <div class="p-4 bg-blue-50 rounded-lg mb-4">
+        <p class="font-medium mb-2">Key Terms Explained:</p>
+        <ul class="list-disc pl-5 space-y-2 text-sm">
+          <li><strong>Retirement Corpus:</strong> The total savings you need for retirement. Calculated using your future expenses and safe withdrawal rate.</li>
+          <li><strong>Safe Withdrawal Rate:</strong> The percentage you can withdraw annually from your retirement corpus to make it last through retirement (typically 3-4%).</li>
+          <li><strong>Capped Monthly Savings:</strong> The maximum practical amount you can save monthly, limited to 50% of your income.</li>
+          <li><strong>Projected Corpus:</strong> What your retirement savings will grow to based on your current savings and recommended monthly contributions.</li>
+          <li><strong>Corpus Shortfall:</strong> The gap between your target corpus and projected corpus.</li>
+        </ul>
+      </div>
+      <p class="text-sm mb-3">Your retirement plan is calculated using industry-standard methods based on your income, expenses, age, and retirement goals.</p>
+      <p class="text-sm">Regular monitoring and adjustments are key to staying on track. Consider reviewing your plan annually or when significant life changes occur.</p>
+    `;
+
+    // Insert after retirement details table
+    const detailsTable = retirementTab.querySelector(".retirement-details");
+    if (detailsTable) {
+      detailsTable.parentNode.insertAdjacentElement(
+        "afterend",
+        explanationSection
+      );
+    } else {
+      retirementTab.appendChild(explanationSection);
+    }
+  }
 }
 
 /**
@@ -748,6 +787,7 @@ function updateRetirementTab(userData, retirementResults) {
 
   // Add retirement readiness metrics
   updateRetirementReadiness(retirementResults);
+  addRetirementExplanationSection();
 }
 
 function addSavingsCapWarning(userData, retirementResults) {
@@ -828,6 +868,8 @@ function updateRetirementDetailsTable(userData, retirementResults) {
     {
       label: "Future Monthly Expenses at Retirement",
       value: formatCurrency(retirementResults.future_monthly_expenses),
+      tooltip:
+        "Your current expenses adjusted for inflation over the years until retirement",
     },
     {
       label: "Future Annual Expenses at Retirement",
@@ -844,6 +886,8 @@ function updateRetirementDetailsTable(userData, retirementResults) {
     {
       label: "Safe Withdrawal Rate",
       value: `${(retirementResults.safe_withdrawal_rate * 100).toFixed(1)}%`,
+      tooltip:
+        "The percentage of your retirement corpus you can withdraw annually to ensure it lasts through retirement",
     },
     {
       label: "Current Savings & Investments",
@@ -852,12 +896,30 @@ function updateRetirementDetailsTable(userData, retirementResults) {
     {
       label: "Future Value of Current Savings",
       value: formatCurrency(retirementResults.future_value_of_current_savings),
+      tooltip:
+        "How much your current savings will grow to by retirement, assuming consistent returns",
     },
     {
       label: "Additional Corpus Needed",
       value: formatCurrency(
         Math.max(0, retirementResults.additional_corpus_needed)
       ),
+      tooltip:
+        "The amount you still need to save beyond what your current savings will grow to",
+    },
+    {
+      label: "Projected Total Corpus",
+      value: formatCurrency(
+        retirementResults.future_value_of_current_savings +
+          calculateFutureSavedAmount(
+            retirementResults.recommended_monthly_savings,
+            retirementResults.pre_retirement_return,
+            userData.retirementAge - userData.age
+          )
+      ),
+      tooltip:
+        "Total projected corpus based on current savings plus recommended monthly contributions",
+      class: "font-semibold bg-blue-50",
     },
     {
       label: "Ideal Monthly Savings Needed",
@@ -1142,8 +1204,248 @@ function updateRetirementScenarios(userData, retirementResults) {
     `;
     container.appendChild(insightDiv);
   }
+  // Initialize the comparison section if it doesn't exist yet
+  initializeComparisonSection();
+}
+// 2. Add a function to initialize the comparison section
+
+function initializeComparisonSection() {
+  // Check if comparison section exists
+  let comparisonSection = document.getElementById(
+    "scenario-comparison-section"
+  );
+
+  if (!comparisonSection) {
+    const retirementTab = document.getElementById("retirement-tab");
+
+    // Create comparison section
+    comparisonSection = document.createElement("div");
+    comparisonSection.id = "scenario-comparison-section";
+    comparisonSection.className = "panel mt-6 hidden"; // Hidden initially
+
+    comparisonSection.innerHTML = `
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="panel-title mb-0">Scenario Comparison</h3>
+        <button id="clear-comparison-btn" class="text-sm px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded">
+          Clear All
+        </button>
+      </div>
+      
+      <div id="comparison-table" class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="text-left py-2 px-3">Scenario</th>
+              <th class="text-right py-2 px-3">Retirement Age</th>
+              <th class="text-right py-2 px-3">Required Corpus</th>
+              <th class="text-right py-2 px-3">Monthly Savings</th>
+              <th class="text-right py-2 px-3">Feasibility</th>
+              <th class="text-center py-2 px-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="comparison-tbody">
+            <!-- Scenarios will be added here -->
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="mt-4">
+        <canvas id="comparison-chart" height="250"></canvas>
+      </div>
+    `;
+
+    retirementTab.appendChild(comparisonSection);
+
+    // Add event listener to clear button
+    document
+      .getElementById("clear-comparison-btn")
+      .addEventListener("click", clearScenarioComparison);
+  }
+}
+// 3. Add function to add a scenario to comparison
+
+function addScenarioToComparison(scenarioId) {
+  // Get scenario data
+  const retirementResults = window.calculationResults.retirementResults;
+  const scenario = retirementResults.scenarios[scenarioId];
+
+  if (!scenario) return;
+
+  // Show comparison section
+  const comparisonSection = document.getElementById(
+    "scenario-comparison-section"
+  );
+  comparisonSection.classList.remove("hidden");
+
+  // Check if scenario is already in comparison
+  const existingRow = document.querySelector(
+    `tr[data-scenario="${scenarioId}"]`
+  );
+  if (existingRow) {
+    // Highlight existing row temporarily
+    existingRow.classList.add("bg-yellow-100");
+    setTimeout(() => {
+      existingRow.classList.remove("bg-yellow-100");
+    }, 1500);
+    return;
+  }
+
+  // Add to comparison table
+  const tbody = document.getElementById("comparison-tbody");
+  const row = document.createElement("tr");
+  row.setAttribute("data-scenario", scenarioId);
+  row.className = "border-b";
+
+  // Determine feasibility color
+  let feasibilityColor = "text-red-600";
+  if (scenario.feasibility >= 8) feasibilityColor = "text-green-600";
+  else if (scenario.feasibility >= 5) feasibilityColor = "text-yellow-600";
+  else if (scenario.feasibility >= 3) feasibilityColor = "text-orange-600";
+
+  row.innerHTML = `
+    <td class="py-2 px-3">${scenario.name}</td>
+    <td class="py-2 px-3 text-right">${scenario.retirement_age}</td>
+    <td class="py-2 px-3 text-right">${formatCurrency(scenario.corpus)}</td>
+    <td class="py-2 px-3 text-right">${formatCurrency(
+      scenario.monthly_savings
+    )}</td>
+    <td class="py-2 px-3 text-right ${feasibilityColor}">${
+    scenario.feasibility
+  }/10</td>
+    <td class="py-2 px-3 text-center">
+      <button class="remove-from-comparison text-xs px-2 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200">
+        Remove
+      </button>
+    </td>
+  `;
+
+  // Add event listener to remove button
+  row
+    .querySelector(".remove-from-comparison")
+    .addEventListener("click", function () {
+      row.remove();
+      updateComparisonChart();
+
+      // Hide comparison section if empty
+      if (tbody.children.length === 0) {
+        comparisonSection.classList.add("hidden");
+      }
+    });
+
+  tbody.appendChild(row);
+
+  // Update comparison chart
+  updateComparisonChart();
 }
 
+// 4. Add function to clear comparison
+
+function clearScenarioComparison() {
+  // Clear table
+  document.getElementById("comparison-tbody").innerHTML = "";
+
+  // Hide section
+  document
+    .getElementById("scenario-comparison-section")
+    .classList.add("hidden");
+
+  // Clear chart
+  if (window.comparisonChart) {
+    window.comparisonChart.destroy();
+    window.comparisonChart = null;
+  }
+}
+
+// 5. Add function to update comparison chart
+
+function updateComparisonChart() {
+  const tbody = document.getElementById("comparison-tbody");
+  const rows = tbody.querySelectorAll("tr");
+
+  if (rows.length === 0) return;
+
+  // Prepare data for chart
+  const labels = [];
+  const corpusData = [];
+  const savingsData = [];
+
+  rows.forEach((row) => {
+    const scenarioId = row.getAttribute("data-scenario");
+    const scenario =
+      window.calculationResults.retirementResults.scenarios[scenarioId];
+
+    if (scenario) {
+      labels.push(scenario.name);
+      corpusData.push(scenario.corpus);
+      savingsData.push(scenario.monthly_savings * 200); // Scale for visibility
+    }
+  });
+
+  // Create chart
+  const ctx = document.getElementById("comparison-chart").getContext("2d");
+
+  if (window.comparisonChart) {
+    window.comparisonChart.destroy();
+  }
+
+  window.comparisonChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Required Corpus",
+          data: corpusData,
+          backgroundColor: "rgba(79, 70, 229, 0.7)",
+          borderColor: "rgba(79, 70, 229, 1)",
+          borderWidth: 1,
+          yAxisID: "y",
+        },
+        {
+          label: "Monthly Savings (×200)",
+          data: savingsData,
+          backgroundColor: "rgba(16, 185, 129, 0.7)",
+          borderColor: "rgba(16, 185, 129, 1)",
+          borderWidth: 1,
+          yAxisID: "y",
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: "Amount (₹)",
+          },
+          ticks: {
+            callback: function (value) {
+              return formatCurrency(value);
+            },
+          },
+        },
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              const label = context.dataset.label || "";
+              const value = context.raw;
+
+              if (label === "Monthly Savings (×200)") {
+                return "Monthly Savings: " + formatCurrency(value / 200);
+              } else {
+                return label + ": " + formatCurrency(value);
+              }
+            },
+          },
+        },
+      },
+    },
+  });
+}
 /**
  * Creates a line chart for retirement corpus growth visualization
  *
@@ -2540,6 +2842,24 @@ function initializeComparisonTools() {
   if (clearComparisonBtn) {
     clearComparisonBtn.addEventListener("click", clearScenarioComparison);
   }
+  // Add compare buttons to all scenario cards if they don't exist
+  document
+    .querySelectorAll("#retirement-scenarios .scenario-card")
+    .forEach((card) => {
+      if (!card.querySelector(".compare-scenario-btn")) {
+        const scenarioTitle =
+          card.querySelector(".scenario-title")?.textContent || "";
+        const compareBtn = document.createElement("button");
+        compareBtn.className =
+          "compare-scenario-btn text-xs px-2 py-1 bg-indigo-100 text-indigo-800 rounded hover:bg-indigo-200 mt-2";
+        compareBtn.textContent = "Compare";
+        compareBtn.setAttribute(
+          "data-scenario",
+          scenarioNameToId(scenarioTitle)
+        );
+        card.appendChild(compareBtn);
+      }
+    });
 }
 
 /**

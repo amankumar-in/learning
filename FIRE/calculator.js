@@ -706,17 +706,10 @@ function applyRetirementLifestyleAdjustments(
   incomeTier,
   financialPriority
 ) {
-  // Base adjustment factors (representing expense reduction in retirement)
-  const baseAdjustments = {
-    VERY_LOW: 0.95, // 5% reduction for very low income
-    LOW: 0.93, // 7% reduction for low income
-    LOWER_MIDDLE: 0.9, // 10% reduction for lower middle income
-    MIDDLE: 0.85, // 15% reduction for middle income
-    HIGH: 0.8, // 20% reduction for high income
-    ULTRA_HIGH: 0.75, // 25% reduction for ultra high income
-  };
+  // Consistent baseline adjustment factor for all income tiers
+  const baseAdjustmentFactor = 0.85; // 15% reduction for everyone
 
-  // Further modify based on financial priority
+  // Further modify based on financial priority (keep this part unchanged)
   let priorityModifier = 0;
   if (financialPriority === "future_focused") {
     priorityModifier = -0.05; // Additional 5% reduction for future-focused
@@ -725,7 +718,7 @@ function applyRetirementLifestyleAdjustments(
   }
 
   // Calculate final adjustment factor
-  const adjustmentFactor = baseAdjustments[incomeTier] + priorityModifier;
+  const adjustmentFactor = baseAdjustmentFactor + priorityModifier;
 
   // Apply adjustment
   return monthlyExpenses * adjustmentFactor;
@@ -1238,9 +1231,9 @@ function calculateRetirementReadiness(
     yearsToRetirement
   );
 
-  // Calculate future value of monthly contributions
+  // Calculate future value of monthly contributions using recommended savings
   const futureContributions = calculateFutureSavedAmount(
-    currentRetirementSavings,
+    requiredSavings, // Use the retirement calculator's recommended amount
     INVESTMENT_RETURN_RATES[userData.riskTolerance].PRE_RETIREMENT,
     yearsToRetirement
   );
