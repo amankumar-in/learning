@@ -41,6 +41,31 @@ function updateResultsUI(
   if (budgetResults.deficit > 0) {
     showDeficitWarning(budgetResults.deficit, userData.monthlyIncome);
   }
+
+  // Initialize and update tradeoff visualizer
+  if (typeof addTradeoffVisualizer === "function") {
+    addTradeoffVisualizer();
+  }
+}
+
+/**
+ * Calculates the future value of a monthly savings amount
+ *
+ * @param {number} monthlySavings Monthly savings amount
+ * @param {number} annualRate Annual interest rate as decimal (e.g., 0.08 for 8%)
+ * @param {number} years Number of years
+ * @returns {number} Future value
+ */
+function calculateFutureSavedAmount(monthlySavings, annualRate, years) {
+  const monthlyRate = annualRate / 12;
+  const months = years * 12;
+
+  // Formula for future value of recurring deposits
+  return (
+    monthlySavings *
+    ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) *
+    (1 + monthlyRate)
+  );
 }
 
 /**
@@ -403,6 +428,147 @@ function updateBudgetTab(userData, budgetResults) {
 
   // Add budget summary/guidance based on income tier
   addBudgetGuidance(userData.incomeTier, budgetResults);
+
+  // Create short-term savings explanation panel
+  addShortTermSavingsExplanation(userData, budgetResults);
+}
+
+/**
+ * Adds an explanation panel for short-term savings
+ *
+ * @param {Object} userData User profile information
+ * @param {Object} budgetResults Budget allocation results
+ */
+function addShortTermSavingsExplanation(userData, budgetResults) {
+  // Only add explanation if short-term savings exist
+  if (
+    !budgetResults.short_term_savings ||
+    budgetResults.short_term_savings <= 0
+  )
+    return;
+
+  // Calculate the percentage of income
+  const shortTermSavingsPercent = (
+    (budgetResults.short_term_savings / userData.monthlyIncome) *
+    100
+  ).toFixed(1);
+
+  // Create panel if it doesn't exist
+  let explanationPanel = document.getElementById(
+    "short-term-savings-explanation"
+  );
+  if (!explanationPanel) {
+    explanationPanel = document.createElement("div");
+    explanationPanel.id = "short-term-savings-explanation";
+    explanationPanel.className = "panel mt-6";
+
+    // Find the budget tab and append
+    const budgetTab = document.getElementById("budget-tab");
+    budgetTab.appendChild(explanationPanel);
+  }
+
+  // Create recommended breakdown based on user's income tier and life stage
+  const emergencyMonths =
+    userData.incomeTier === "HIGH" || userData.incomeTier === "ULTRA_HIGH"
+      ? 6
+      : 4;
+  const monthlyExpenses =
+    userData.monthlyExpenses > 0
+      ? userData.monthlyExpenses
+      : budgetResults.total_essentials;
+  const recommendedEmergencyFund = monthlyExpenses * emergencyMonths;
+
+  // Calculate emergency fund contribution (50% of short-term savings until funded)
+  const emergencyFundContribution = Math.min(
+    budgetResults.short_term_savings * 0.5,
+    recommendedEmergencyFund / 24
+  ); // Fund within 2 years
+
+  // Calculate other allocations
+  const majorExpensesAllocation = budgetResults.short_term_savings * 0.3;
+  const lifeGoalsAllocation = budgetResults.short_term_savings * 0.2;
+
+  // Build the panel HTML
+  explanationPanel.innerHTML = `
+  <h3 class="panel-title">Understanding Your Short-Term Savings</h3>
+  
+  <div class="bg-blue-50 p-4 rounded-lg mb-4">
+    <p class="mb-3">Your budget allocates <strong>${formatCurrency(
+      budgetResults.short_term_savings
+    )}</strong> 
+      (${shortTermSavingsPercent}% of income) to short-term savings each month. These savings are separate from 
+      your retirement funds and serve different purposes.</p>
+      
+    <h4 class="font-medium mb-2">What Are Short-Term Savings For?</h4>
+    <ul class="list-disc pl-5 mb-4 space-y-1">
+      <li><strong>Emergency Fund:</strong> For unexpected expenses like medical emergencies or sudden income loss</li>
+      <li><strong>Major Planned Expenses:</strong> For infrequent large costs like home repairs, vehicle purchases</li>
+      <li><strong>Life Goals:</strong> For medium-term objectives like education, vacations, or special events</li>
+      <li><strong>Opportunity Fund:</strong> For unexpected investment or business opportunities</li>
+    </ul>
+  </div>
+  
+  <h4 class="font-medium mb-3">Recommended Monthly Allocation</h4>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    <div class="bg-white p-3 rounded-lg border border-gray-200">
+      <div class="flex justify-between mb-1">
+        <div class="text-sm text-indigo-700 font-medium">Emergency Fund</div>
+        <div class="text-sm font-medium">50%</div>
+      </div>
+      <div class="font-bold mb-1">${formatCurrency(
+        emergencyFundContribution
+      )}/month</div>
+      <div class="text-xs text-gray-600 mb-2">Goal: ${formatCurrency(
+        recommendedEmergencyFund
+      )} (${emergencyMonths} months expenses)</div>
+      <div class="h-2 w-full bg-gray-200 rounded">
+        <div class="bg-indigo-600 h-2 rounded" style="width: 50%"></div>
+      </div>
+      <div class="mt-1 text-xs text-gray-500">Allocation: 50% of short-term savings</div>
+    </div>
+    
+    <div class="bg-white p-3 rounded-lg border border-gray-200">
+      <div class="flex justify-between mb-1">
+        <div class="text-sm text-green-700 font-medium">Major Planned Expenses</div>
+        <div class="text-sm font-medium">30%</div>
+      </div>
+      <div class="font-bold mb-1">${formatCurrency(
+        majorExpensesAllocation
+      )}/month</div>
+      <div class="text-xs text-gray-600 mb-2">For vehicle, home repairs, electronics</div>
+      <div class="h-2 w-full bg-gray-200 rounded">
+        <div class="bg-green-600 h-2 rounded" style="width: 30%"></div>
+      </div>
+      <div class="mt-1 text-xs text-gray-500">Allocation: 30% of short-term savings</div>
+    </div>
+    
+    <div class="bg-white p-3 rounded-lg border border-gray-200">
+  <div class="flex justify-between mb-1">
+    <div class="text-sm font-medium" style="color: #f59e0b;">Life Goals</div>
+    <div class="text-sm font-medium">20%</div>
+  </div>
+  <div class="font-bold mb-1">${formatCurrency(lifeGoalsAllocation)}/month</div>
+  <div class="text-xs text-gray-600 mb-2">For education, travel, special events</div>
+  
+  <!-- Completely simplified progress bar with inline styles -->
+  <div style="width: 100%; height: 8px; background-color: #e5e7eb; border-radius: 4px; position: relative;">
+    <div style="position: absolute; top: 0; left: 0; width: 20%; height: 8px; background-color: #f59e0b; border-radius: 4px;"></div>
+  </div>
+  
+  <div class="mt-1 text-xs text-gray-500">Allocation: 20% of short-term savings</div>
+</div>
+  </div>
+  
+  <div class="text-sm bg-gray-50 p-3 rounded-lg">
+    <p class="font-medium mb-1">Pro Tips for Short-Term Savings:</p>
+    <ul class="list-disc pl-5 space-y-1">
+      <li>Keep your emergency fund in a separate high-yield savings account for easy access</li>
+      <li>For planned expenses 1-3 years away, consider short-term fixed deposits or liquid debt funds</li>
+      <li>Create separate sub-accounts for different goals to avoid dipping into your emergency fund</li>
+      <li>Review and adjust your short-term savings allocations every 6 months</li>
+    </ul>
+  </div>
+`;
 }
 
 /**
@@ -506,18 +672,39 @@ function addBudgetGuidance(incomeTier, budgetResults) {
     <p class="mb-4">${description}</p>
     
     <div class="mb-4">
-      <div class="flex justify-between mb-1">
-        <span class="text-sm font-medium">Budget Allocation</span>
-      </div>
-      <div class="w-full bg-gray-200 rounded-full h-2.5">
-        <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${essentialPercent}%"></div>
-      </div>
-      <div class="flex justify-between text-sm mt-1">
-        <span>${essentialPercent}% Essentials</span>
-        <span>${savingsPercent}% Savings</span>
-        <span>${discretionaryPercent}% Discretionary</span>
-      </div>
+  <div class="flex justify-between mb-1">
+    <span class="text-sm font-medium">Budget Allocation</span>
+  </div>
+  
+  <!-- Stacked progress bar with inline styles for reliability -->
+  <div style="width: 100%; height: 10px; background-color: #f3f4f6; border-radius: 9999px; position: relative; overflow: hidden;">
+    <!-- Essentials segment -->
+    <div style="position: absolute; top: 0; left: 0; height: 10px; background-color: #3b82f6; width: ${essentialPercent}%;"></div>
+    
+    <!-- Savings segment -->
+    <div style="position: absolute; top: 0; left: ${essentialPercent}%; height: 10px; background-color: #10b981; width: ${savingsPercent}%;"></div>
+    
+    <!-- Discretionary segment -->
+    <div style="position: absolute; top: 0; left: ${
+      Number(essentialPercent) + Number(savingsPercent)
+    }%; height: 10px; background-color: #f59e0b; width: ${discretionaryPercent}%;"></div>
+  </div>
+  
+  <div class="flex justify-between text-sm mt-2">
+    <div>
+      <span class="inline-block w-3 h-3 bg-blue-500 rounded-full mr-1"></span>
+      <span>${essentialPercent}% Essentials</span>
     </div>
+    <div>
+      <span class="inline-block w-3 h-3 bg-green-500 rounded-full mr-1"></span>
+      <span>${savingsPercent}% Savings</span>
+    </div>
+    <div>
+      <span class="inline-block w-3 h-3 bg-amber-500 rounded-full mr-1"></span>
+      <span>${discretionaryPercent}% Discretionary</span>
+    </div>
+  </div>
+</div>
     
     <h4 class="font-medium mb-2">Budget Tips:</h4>
     <ul class="list-disc pl-5 space-y-1">
@@ -680,6 +867,11 @@ function updateSubcategoryBreakdownTable(budgetResults) {
     furnishings: "Furnishings",
     repairs: "Repairs",
     supplies: "Household Supplies",
+
+    // Short-term savings subcategories
+    emergency_fund: "Emergency Fund",
+    major_expenses: "Major Planned Expenses",
+    life_goals: "Life Goals & Opportunities",
 
     // Discretionary
     entertainment: "Entertainment",
@@ -869,12 +1061,282 @@ function updateRetirementTab(userData, retirementResults) {
   // Add visual retirement comparison
   addRetirementComparisonVisual(userData, retirementResults);
 
+  // NEW: Add scenario explorer
+  addRetirementScenarioExplorer(
+    userData,
+    retirementResults,
+    window.calculationResults.budgetResults
+  );
+
   // Add retirement readiness metrics
   updateRetirementReadiness(retirementResults);
   addRetirementExplanationSection();
 
   // Add guidance panel
   addRetirementGuidancePanel(userData, retirementResults);
+}
+
+/**
+ * Adds an interactive scenario exploration panel to the retirement tab
+ *
+ * @param {Object} userData User profile information
+ * @param {Object} retirementResults Retirement planning results
+ * @param {Object} budgetResults Budget allocation results
+ */
+function addRetirementScenarioExplorer(
+  userData,
+  retirementResults,
+  budgetResults
+) {
+  // Only add if there's a retirement shortfall
+  const hasShortfall =
+    retirementResults.required_monthly_savings >
+    retirementResults.recommended_monthly_savings;
+  if (!hasShortfall && retirementResults.recommended_monthly_savings === 0)
+    return;
+
+  // Create panel if it doesn't exist
+  let scenarioPanel = document.getElementById("retirement-scenario-explorer");
+  if (!scenarioPanel) {
+    scenarioPanel = document.createElement("div");
+    scenarioPanel.id = "retirement-scenario-explorer";
+    scenarioPanel.className = "panel mt-6";
+
+    // Find the retirement tab and append
+    const retirementTab = document.getElementById("retirement-tab");
+    retirementTab.appendChild(scenarioPanel);
+  }
+
+  // Calculate key values
+  const shortfall = Math.max(
+    0,
+    retirementResults.required_monthly_savings -
+      retirementResults.recommended_monthly_savings
+  );
+  const currentRetirementSavings =
+    retirementResults.recommended_monthly_savings;
+  const currentDiscretionary = budgetResults.discretionary;
+  const retirementPercentage = (
+    (currentRetirementSavings / retirementResults.required_monthly_savings) *
+    100
+  ).toFixed(0);
+
+  // Calculate the minimum discretionary reduction needed to fully fund retirement
+  const minReductionNeeded = Math.min(shortfall, currentDiscretionary);
+  const minReductionPercent = (
+    (minReductionNeeded / currentDiscretionary) *
+    100
+  ).toFixed(0);
+
+  // Calculate future impact
+  const yearsToRetirement = userData.retirementAge - userData.age;
+  const monthlyShortfall =
+    retirementResults.required_monthly_savings -
+    retirementResults.recommended_monthly_savings;
+  const annualShortfall = monthlyShortfall * 12;
+
+  // Calculate corpus impact
+  const shortfallImpact = calculateFutureSavedAmount(
+    monthlyShortfall,
+    retirementResults.pre_retirement_return,
+    yearsToRetirement
+  );
+
+  // Current slider value
+  let currentSliderValue = 0;
+
+  // Build HTML content
+  scenarioPanel.innerHTML = `
+    <h3 class="panel-title">Explore Budget Scenarios</h3>
+    
+    <div class="bg-blue-50 p-4 rounded-lg mb-4">
+      <p class="mb-2">Your current budget funds <strong>${retirementPercentage}%</strong> of your ideal retirement goal. 
+      Explore how small adjustments to your discretionary spending could impact your retirement readiness.</p>
+      
+      ${
+        hasShortfall
+          ? `
+      <p class="text-sm text-indigo-800">
+        <strong>Key insight:</strong> Shifting just ${minReductionPercent}% of your current discretionary budget 
+        (${formatCurrency(
+          minReductionNeeded
+        )}/month) to retirement would fully fund your retirement goal.
+      </p>
+      `
+          : ""
+      }
+    </div>
+    
+    <div class="mb-6">
+      <h4 class="font-medium mb-3">Adjust Your Discretionary vs. Retirement Balance</h4>
+      
+      <div class="mb-4">
+        <label for="scenario-slider" class="block text-sm font-medium text-gray-700 mb-1">
+          Shift from Discretionary to Retirement:
+          <span id="slider-value">0%</span>
+        </label>
+        <input type="range" id="scenario-slider" min="0" max="${Math.min(
+          100,
+          Math.floor(
+            (currentDiscretionary /
+              retirementResults.required_monthly_savings) *
+              100
+          )
+        )}" 
+               value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <div class="text-sm text-gray-600 mb-1">Current Monthly Allocation</div>
+          <div class="flex items-center mb-2">
+            <div class="w-3 h-3 rounded-full bg-amber-500 mr-2"></div>
+            <div class="text-sm">Discretionary: <span class="font-medium" id="current-discretionary">${formatCurrency(
+              currentDiscretionary
+            )}</span></div>
+          </div>
+          <div class="flex items-center">
+            <div class="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+            <div class="text-sm">Retirement: <span class="font-medium" id="current-retirement">${formatCurrency(
+              currentRetirementSavings
+            )}</span></div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="text-sm text-gray-600 mb-1">Adjusted Monthly Allocation</div>
+          <div class="flex items-center mb-2">
+            <div class="w-3 h-3 rounded-full bg-amber-500 mr-2"></div>
+            <div class="text-sm">Discretionary: <span class="font-medium" id="adjusted-discretionary">${formatCurrency(
+              currentDiscretionary
+            )}</span></div>
+          </div>
+          <div class="flex items-center">
+            <div class="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+            <div class="text-sm">Retirement: <span class="font-medium" id="adjusted-retirement">${formatCurrency(
+              currentRetirementSavings
+            )}</span></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="p-3 rounded-lg border border-gray-200 bg-gray-50 mb-4">
+        <div class="text-sm font-medium mb-2">Long-term Impact of This Adjustment:</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <div class="text-sm text-gray-600">Retirement Funding</div>
+            <div class="text-lg font-bold" id="retirement-funding">${retirementPercentage}%</div>
+            <div class="h-2 w-full bg-gray-200 rounded mt-1">
+              <div class="bg-blue-600 h-2 rounded" id="funding-progress" style="width: ${retirementPercentage}%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="text-sm text-gray-600">Additional Retirement Savings</div>
+            <div class="text-lg font-bold text-green-700" id="additional-savings">+${formatCurrency(
+              0
+            )}</div>
+            <div class="text-xs text-gray-500" id="corpus-impact">After ${yearsToRetirement} years: +${formatCurrency(
+    0
+  )}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex justify-center">
+        <button id="optimize-retirement-btn" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+          Optimize for Full Retirement
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Add event listeners
+  setTimeout(() => {
+    const slider = document.getElementById("scenario-slider");
+    const sliderValue = document.getElementById("slider-value");
+    const currentDiscretionaryElem = document.getElementById(
+      "current-discretionary"
+    );
+    const currentRetirementElem = document.getElementById("current-retirement");
+    const adjustedDiscretionaryElem = document.getElementById(
+      "adjusted-discretionary"
+    );
+    const adjustedRetirementElem = document.getElementById(
+      "adjusted-retirement"
+    );
+    const retirementFundingElem = document.getElementById("retirement-funding");
+    const fundingProgressElem = document.getElementById("funding-progress");
+    const additionalSavingsElem = document.getElementById("additional-savings");
+    const corpusImpactElem = document.getElementById("corpus-impact");
+    const optimizeBtn = document.getElementById("optimize-retirement-btn");
+
+    if (slider) {
+      slider.addEventListener("input", function (e) {
+        currentSliderValue = parseInt(e.target.value);
+        updateScenarioUI();
+      });
+    }
+
+    if (optimizeBtn) {
+      optimizeBtn.addEventListener("click", function () {
+        // Set slider to minimum needed for full funding
+        if (slider) {
+          slider.value = minReductionPercent;
+          currentSliderValue = parseInt(minReductionPercent);
+          updateScenarioUI();
+        }
+      });
+    }
+
+    function updateScenarioUI() {
+      // Update slider value display
+      if (sliderValue) sliderValue.textContent = `${currentSliderValue}%`;
+
+      // Calculate new allocations
+      const reductionAmount = (currentDiscretionary * currentSliderValue) / 100;
+      const newDiscretionary = currentDiscretionary - reductionAmount;
+      const newRetirement = currentRetirementSavings + reductionAmount;
+
+      // Calculate new retirement funding percentage
+      const newFundingPercent = Math.min(
+        100,
+        Math.round(
+          (newRetirement / retirementResults.required_monthly_savings) * 100
+        )
+      );
+
+      // Update UI elements
+      if (adjustedDiscretionaryElem)
+        adjustedDiscretionaryElem.textContent =
+          formatCurrency(newDiscretionary);
+      if (adjustedRetirementElem)
+        adjustedRetirementElem.textContent = formatCurrency(newRetirement);
+      if (retirementFundingElem)
+        retirementFundingElem.textContent = `${newFundingPercent}%`;
+      if (fundingProgressElem)
+        fundingProgressElem.style.width = `${newFundingPercent}%`;
+
+      // Calculate impact on savings
+      const monthlySavingsIncrease = reductionAmount;
+      const annualSavingsIncrease = monthlySavingsIncrease * 12;
+
+      // Calculate corpus impact
+      const corpusIncrease = calculateFutureSavedAmount(
+        monthlySavingsIncrease,
+        retirementResults.pre_retirement_return,
+        yearsToRetirement
+      );
+
+      if (additionalSavingsElem)
+        additionalSavingsElem.textContent = `+${formatCurrency(
+          monthlySavingsIncrease
+        )}`;
+      if (corpusImpactElem)
+        corpusImpactElem.textContent = `After ${yearsToRetirement} years: +${formatCurrency(
+          corpusIncrease
+        )}`;
+    }
+  }, 100);
 }
 
 function addSavingsCapWarning(userData, retirementResults) {
@@ -2867,7 +3329,21 @@ function updateWealthBuildingPlan(userData, investmentResults) {
 function updateOptimizationTab(userData, optimizationResults, budgetResults) {
   const container = document.getElementById("optimization-opportunities");
   container.innerHTML = "";
-
+  // Add new explanation section
+  const explanationSection = document.createElement("div");
+  explanationSection.className = "bg-blue-50 p-4 rounded-lg mb-6";
+  explanationSection.innerHTML = `
+  <h4 class="font-medium mb-2">Understanding Your Budget Opportunities</h4>
+  <p class="text-sm mb-2">
+    Your current budget balances present needs with future goals. This section shows areas where 
+    you could reallocate funds if you wanted to increase your retirement savings.
+  </p>
+  <p class="text-sm">
+    These are opportunities, not requirements. Finding the right balance between enjoying today 
+    and saving for tomorrow is a personal choice.
+  </p>
+`;
+  container.appendChild(explanationSection);
   if (!optimizationResults.has_opportunities) {
     const noOpportunities = document.createElement("div");
     noOpportunities.className = "text-center py-4 text-gray-500";
@@ -2933,39 +3409,44 @@ function updateOptimizationTab(userData, optimizationResults, budgetResults) {
     const header = document.createElement("div");
     header.className = "p-4 border-b bg-gray-50";
     header.innerHTML = `
-      <div class="flex justify-between items-center">
-        <div class="opportunity-title font-semibold">${categoryName}</div>
-        <div class="opportunity-amount text-green-600 font-semibold">
-          Save up to ${formatCurrency(opportunity.potential_savings.moderate)}
-        </div>
-      </div>
-    `;
+  <div class="flex justify-between items-center">
+    <div class="opportunity-title font-semibold">${categoryName}</div>
+    <div class="opportunity-amount text-blue-600 font-semibold">
+      Opportunity: ${formatCurrency(opportunity.potential_savings.moderate)}
+    </div>
+  </div>
+`;
 
     // Card details
     const details = document.createElement("div");
     details.className = "p-4 border-b";
     details.innerHTML = `
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <div class="flex justify-between items-center mb-2">
-            <div class="text-sm text-gray-600">Current Spending</div>
-            <div class="font-medium">${formatCurrency(
-              opportunity.current_spending
-            )}</div>
-          </div>
-          <div class="flex justify-between items-center mb-2">
-            <div class="text-sm text-gray-600">Benchmark</div>
-            <div class="font-medium">${formatCurrency(
-              opportunity.benchmark
-            )}</div>
-          </div>
-          <div class="flex justify-between items-center">
-            <div class="text-sm text-gray-600">Excess</div>
-            <div class="font-medium text-red-500">+${opportunity.excess_percentage.toFixed(
-              0
-            )}%</div>
-          </div>
-        </div>
+  <div class="grid grid-cols-1 gap-4">
+    <div>
+      <div class="flex justify-between items-center mb-2">
+        <div class="text-sm text-gray-600">Current Recommended Allocation</div>
+        <div class="font-medium">${formatCurrency(
+          opportunity.current_spending
+        )}</div>
+      </div>
+      <div class="flex justify-between items-center mb-2">
+        <div class="text-sm text-gray-600">Typical for Your Income Level</div>
+        <div class="font-medium">${formatCurrency(opportunity.benchmark)}</div>
+      </div>
+      <div class="bg-blue-50 p-3 rounded-lg mt-2 text-sm">
+        <p>Your budget provides a higher ${categoryName.toLowerCase()} allocation than typical. 
+        This reflects your financial capacity, but you could redirect some of these funds to 
+        retirement if you prefer.</p>
+        <p class="mt-2">Redirecting about ${formatCurrency(
+          opportunity.potential_savings.moderate
+        )} 
+        would still leave you with an above-average lifestyle while boosting your retirement by 
+        ${formatCurrency(
+          opportunity.potential_savings.moderate * 12
+        )} per year.</p>
+      </div>
+    </div>
+  </div>
         <div>
           <div class="mb-2">
             <div class="text-sm text-gray-600 mb-1">Spending vs. Benchmark</div>

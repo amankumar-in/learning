@@ -165,6 +165,14 @@ function calculateBudgetAllocation(userData) {
   }
 
   // Step 5: Calculate Category and Subcategory Allocations
+
+  // Short-term savings breakdown
+  const shortTermSavingsBreakdown = {
+    emergency_fund: shortTermSavings * 0.5,
+    major_expenses: shortTermSavings * 0.3,
+    life_goals: shortTermSavings * 0.2,
+  };
+
   const housingBreakdown = {
     rent_or_emi: housing * 0.85,
     maintenance: housing * 0.1,
@@ -289,6 +297,7 @@ function calculateBudgetAllocation(userData) {
       personal: personalBreakdown,
       household: householdBreakdown,
       discretionary: discretionaryBreakdown,
+      short_term_savings: shortTermSavingsBreakdown, // Add this line
     },
 
     // Metrics
