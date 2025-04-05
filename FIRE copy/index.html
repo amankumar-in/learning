@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FIRE - Financial Independence, Retire Early</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body class="bg-gray-50 text-gray-800">
+    <header class="bg-indigo-600 shadow-lg">
+      <div class="container mx-auto px-4 py-4">
+        <h1 class="text-white text-2xl font-bold">
+          FIRE - Financial Independence, Retire Early
+        </h1>
+        <p class="text-indigo-100">Indian Retirement & Budget Calculator</p>
+      </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6">
+      <!-- App progress indicator -->
+      <div class="progress-container mb-8">
+        <div class="progress-bar">
+          <div class="progress-step active" data-step="1">Profile</div>
+          <div class="progress-step" data-step="2">Financial Info</div>
+          <div class="progress-step" data-step="3">Preferences</div>
+          <div class="progress-step" data-step="4">Results</div>
+        </div>
+      </div>
+
+      <!-- Multi-step form -->
+      <div class="form-container bg-white rounded-lg shadow-md p-6">
+        <!-- Step 1: Basic Profile -->
+        <div class="form-step active" data-step="1">
+          <h2 class="text-xl font-bold mb-4">Basic Profile Information</h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="form-group">
+              <label for="age">Your Current Age</label>
+              <input
+                type="number"
+                id="age"
+                min="18"
+                max="75"
+                required
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="retirement-age">Expected Retirement Age</label>
+              <input
+                type="number"
+                id="retirement-age"
+                min="35"
+                max="80"
+                required
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="life-expectancy">Life Expectancy (Years)</label>
+              <input
+                type="number"
+                id="life-expectancy"
+                min="60"
+                max="100"
+                value="85"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="family-size">Family Size</label>
+              <input
+                type="number"
+                id="family-size"
+                min="1"
+                max="10"
+                value="1"
+                required
+                class="form-input"
+              />
+            </div>
+          </div>
+
+          <div class="form-group mt-4">
+            <label for="location">City / Location</label>
+            <select id="location" required class="form-select">
+              <option value="">Select your city</option>
+              <optgroup label="Metro (Tier 1)">
+                <option value="mumbai">Mumbai</option>
+                <option value="delhi">Delhi</option>
+                <option value="bangalore">Bangalore</option>
+                <option value="chennai">Chennai</option>
+                <option value="kolkata">Kolkata</option>
+                <option value="hyderabad">Hyderabad</option>
+                <option value="pune">Pune</option>
+              </optgroup>
+              <optgroup label="Tier 2 Cities">
+                <option value="ahmedabad">Ahmedabad</option>
+                <option value="jaipur">Jaipur</option>
+                <option value="kochi">Kochi</option>
+                <option value="lucknow">Lucknow</option>
+                <option value="chandigarh">Chandigarh</option>
+                <option value="indore">Indore</option>
+                <option value="nagpur">Nagpur</option>
+              </optgroup>
+              <optgroup label="Tier 3 Cities & Others">
+                <option value="tier3">Tier 3 City</option>
+                <option value="other">Other</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div class="family-composition mt-6 hidden">
+            <h3 class="text-lg font-semibold mb-2">Family Composition</h3>
+            <div id="family-members-container" class="space-y-4">
+              <!-- Family members will be added here dynamically -->
+            </div>
+          </div>
+
+          <div class="flex justify-end mt-6">
+            <button type="button" class="btn-next btn-primary">Next</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Financial Information -->
+        <div class="form-step" data-step="2">
+          <h2 class="text-xl font-bold mb-4">Current Financial Situation</h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="form-group">
+              <label for="monthly-income">Monthly Income (₹)</label>
+              <input
+                type="number"
+                id="monthly-income"
+                min="5000"
+                required
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="monthly-expenses">Current Monthly Expenses (₹)</label>
+              <input
+                type="number"
+                id="monthly-expenses"
+                min="0"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="current-savings"
+                >Existing Savings & Investments (₹)</label
+              >
+              <input
+                type="number"
+                id="current-savings"
+                min="0"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="current-debt">Current Debt Obligations (₹)</label>
+              <input
+                type="number"
+                id="current-debt"
+                min="0"
+                class="form-input"
+              />
+            </div>
+          </div>
+
+          <div class="form-group mt-4">
+            <label for="housing-status">Housing Status</label>
+            <select id="housing-status" required class="form-select">
+              <option value="rented">Rented</option>
+              <option value="owned_fully">Owned (Fully Paid)</option>
+              <option value="loan">Owned (Loan/EMI)</option>
+            </select>
+          </div>
+
+          <div id="housing-loan-section" class="mt-4 hidden">
+            <div class="form-group">
+              <label for="housing-emi">Current Housing EMI (₹)</label>
+              <input
+                type="number"
+                id="housing-emi"
+                min="0"
+                class="form-input"
+              />
+            </div>
+          </div>
+
+          <div class="flex justify-between mt-6">
+            <button type="button" class="btn-prev btn-secondary">
+              Previous
+            </button>
+            <button type="button" class="btn-next btn-primary">Next</button>
+          </div>
+        </div>
+
+        <!-- Step 3: Preferences -->
+        <div class="form-step" data-step="3">
+          <h2 class="text-xl font-bold mb-4">Financial Preferences</h2>
+
+          <div class="form-group mb-6">
+            <label for="financial-priority">Financial Priority</label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+              <div class="priority-option" data-value="future_focused">
+                <input
+                  type="radio"
+                  name="priority"
+                  id="priority-future"
+                  value="future_focused"
+                  class="hidden"
+                />
+                <label for="priority-future" class="priority-label">
+                  <span class="priority-title">Future Focused</span>
+                  <span class="priority-desc"
+                    >Prioritize retirement and long-term goals over current
+                    lifestyle</span
+                  >
+                </label>
+              </div>
+              <div class="priority-option" data-value="balanced">
+                <input
+                  type="radio"
+                  name="priority"
+                  id="priority-balanced"
+                  value="balanced"
+                  class="hidden"
+                  checked
+                />
+                <label for="priority-balanced" class="priority-label">
+                  <span class="priority-title">Balanced</span>
+                  <span class="priority-desc"
+                    >Equal importance to current lifestyle and future
+                    goals</span
+                  >
+                </label>
+              </div>
+              <div class="priority-option" data-value="current_focused">
+                <input
+                  type="radio"
+                  name="priority"
+                  id="priority-current"
+                  value="current_focused"
+                  class="hidden"
+                />
+                <label for="priority-current" class="priority-label">
+                  <span class="priority-title">Current Focused</span>
+                  <span class="priority-desc"
+                    >Emphasis on quality of life now while still saving for the
+                    future</span
+                  >
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group mb-6">
+            <label for="risk-tolerance">Risk Tolerance</label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+              <div class="risk-option" data-value="conservative">
+                <input
+                  type="radio"
+                  name="risk"
+                  id="risk-conservative"
+                  value="CONSERVATIVE"
+                  class="hidden"
+                />
+                <label for="risk-conservative" class="risk-label">
+                  <span class="risk-title">Conservative</span>
+                  <span class="risk-desc"
+                    >Prefer safety and stable returns over growth</span
+                  >
+                </label>
+              </div>
+              <div class="risk-option" data-value="moderate">
+                <input
+                  type="radio"
+                  name="risk"
+                  id="risk-moderate"
+                  value="MODERATE"
+                  class="hidden"
+                  checked
+                />
+                <label for="risk-moderate" class="risk-label">
+                  <span class="risk-title">Moderate</span>
+                  <span class="risk-desc"
+                    >Balance between growth and stability</span
+                  >
+                </label>
+              </div>
+              <div class="risk-option" data-value="aggressive">
+                <input
+                  type="radio"
+                  name="risk"
+                  id="risk-aggressive"
+                  value="AGGRESSIVE"
+                  class="hidden"
+                />
+                <label for="risk-aggressive" class="risk-label">
+                  <span class="risk-title">Aggressive</span>
+                  <span class="risk-desc"
+                    >Prioritize growth, comfortable with higher volatility</span
+                  >
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group mb-6">
+            <label for="tax-regime">Tax Regime</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+              <div class="tax-option" data-value="old">
+                <input
+                  type="radio"
+                  name="tax"
+                  id="tax-old"
+                  value="old"
+                  class="hidden"
+                  checked
+                />
+                <label for="tax-old" class="tax-label">
+                  <span class="tax-title">Old Regime</span>
+                  <span class="tax-desc">With deductions and exemptions</span>
+                </label>
+              </div>
+              <div class="tax-option" data-value="new">
+                <input
+                  type="radio"
+                  name="tax"
+                  id="tax-new"
+                  value="new"
+                  class="hidden"
+                />
+                <label for="tax-new" class="tax-label">
+                  <span class="tax-title">New Regime</span>
+                  <span class="tax-desc">Lower rates without deductions</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-between mt-6">
+            <button type="button" class="btn-prev btn-secondary">
+              Previous
+            </button>
+            <button type="button" id="calculate-btn" class="btn-primary">
+              Calculate Plan
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 4: Results Dashboard -->
+        <div class="form-step" data-step="4">
+          <div class="dashboard">
+            <div
+              class="dashboard-header flex justify-between items-center mb-6"
+            >
+              <h2 class="text-xl font-bold">Your Financial Dashboard</h2>
+              <div class="actions">
+                <button id="export-pdf" class="btn-secondary mr-2">
+                  Export PDF
+                </button>
+                <button id="recalculate" class="btn-secondary">
+                  Edit Inputs
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="dashboard-summary grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+            >
+              <div class="metric-card">
+                <h3>Monthly Budget</h3>
+                <p class="metric-value" id="monthly-budget-value">₹0</p>
+                <div class="metric-desc">Recommended allocation</div>
+              </div>
+              <div class="metric-card">
+                <h3>Retirement Corpus</h3>
+                <p class="metric-value" id="retirement-corpus-value">₹0</p>
+                <div class="metric-desc">
+                  Target by age <span id="retirement-age-display">60</span>
+                </div>
+              </div>
+              <div class="metric-card">
+                <h3>Monthly Savings Required</h3>
+                <p class="metric-value" id="monthly-savings-value">₹0</p>
+                <div class="metric-desc" id="savings-percent">0% of income</div>
+              </div>
+            </div>
+
+            <!-- Results Tabs -->
+            <div class="dashboard-tabs mb-6">
+              <div class="tabs-header flex border-b">
+                <button class="tab-btn active" data-tab="budget">Budget</button>
+                <button class="tab-btn" data-tab="retirement">
+                  Retirement
+                </button>
+                <button class="tab-btn" data-tab="investments">
+                  Investments
+                </button>
+                <button class="tab-btn" data-tab="optimization">
+                  Optimization
+                </button>
+              </div>
+
+              <!-- Budget Tab -->
+              <div class="tab-content active" id="budget-tab">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  <div class="panel">
+                    <h3 class="panel-title">Monthly Budget Allocation</h3>
+                    <div class="chart-container">
+                      <canvas id="budget-chart"></canvas>
+                    </div>
+                  </div>
+                  <div class="panel">
+                    <h3 class="panel-title">Detailed Breakdown</h3>
+                    <div class="budget-breakdown">
+                      <table class="w-full">
+                        <thead>
+                          <tr>
+                            <th class="text-left">Category</th>
+                            <th class="text-right">Amount (₹)</th>
+                            <th class="text-right">% of Income</th>
+                          </tr>
+                        </thead>
+                        <tbody id="budget-breakdown-table">
+                          <!-- Budget breakdown will be inserted here -->
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="panel mt-6">
+                  <h3 class="panel-title">Subcategory Details</h3>
+                  <div class="subcategory-breakdown">
+                    <table class="w-full">
+                      <thead>
+                        <tr>
+                          <th class="text-left">Category</th>
+                          <th class="text-left">Subcategory</th>
+                          <th class="text-right">Amount (₹)</th>
+                        </tr>
+                      </thead>
+                      <tbody id="subcategory-breakdown-table">
+                        <!-- Subcategory breakdown will be inserted here -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Retirement Tab -->
+              <div class="tab-content" id="retirement-tab">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  <div class="panel">
+                    <h3 class="panel-title">Retirement Corpus Growth</h3>
+                    <div class="chart-container">
+                      <canvas id="retirement-growth-chart"></canvas>
+                    </div>
+                  </div>
+                  <div class="panel">
+                    <h3 class="panel-title">Retirement Details</h3>
+                    <div class="retirement-details">
+                      <table class="w-full">
+                        <tbody id="retirement-details-table">
+                          <!-- Retirement details will be inserted here -->
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="panel mt-6">
+                  <h3 class="panel-title">Retirement Scenarios</h3>
+                  <div
+                    class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4"
+                    id="retirement-scenarios"
+                  >
+                    <!-- Retirement scenarios will be inserted here -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Investments Tab -->
+              <div class="tab-content" id="investments-tab">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  <div class="panel">
+                    <h3 class="panel-title">
+                      Recommended Portfolio Allocation
+                    </h3>
+                    <div class="chart-container">
+                      <canvas id="investment-chart"></canvas>
+                    </div>
+                  </div>
+                  <div class="panel">
+                    <h3 class="panel-title">Investment Breakdown</h3>
+                    <div class="investment-breakdown">
+                      <table class="w-full">
+                        <thead>
+                          <tr>
+                            <th class="text-left">Category</th>
+                            <th class="text-right">Allocation (%)</th>
+                            <th class="text-right">Monthly Amount (₹)</th>
+                          </tr>
+                        </thead>
+                        <tbody id="investment-breakdown-table">
+                          <!-- Investment breakdown will be inserted here -->
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="panel mt-6">
+                  <h3 class="panel-title">
+                    Detailed Investment Recommendations
+                  </h3>
+                  <div
+                    class="investment-recommendations"
+                    id="investment-recommendations"
+                  >
+                    <!-- Investment recommendations will be inserted here -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Optimization Tab -->
+              <div class="tab-content" id="optimization-tab">
+                <div class="panel mt-6">
+                  <h3 class="panel-title">
+                    Expense Optimization Opportunities
+                  </h3>
+                  <div
+                    class="optimization-opportunities"
+                    id="optimization-opportunities"
+                  >
+                    <!-- Optimization opportunities will be inserted here -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-between mt-6">
+            <button type="button" class="btn-prev btn-secondary">
+              Previous
+            </button>
+            <button type="button" id="start-over" class="btn-primary">
+              Start Over
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="bg-gray-100 border-t mt-8">
+      <div class="container mx-auto px-4 py-4 text-center text-gray-600">
+        <p>
+          FIRE - Financial Independence, Retire Early | Indian Retirement
+          Calculator
+        </p>
+      </div>
+    </footer>
+
+    <script src="constants.js"></script>
+    <script src="setup.js"></script>
+    <script src="calculator.js"></script>
+    <script src="engine.js"></script>
+    <script src="ui.js"></script>
+  </body>
+</html>

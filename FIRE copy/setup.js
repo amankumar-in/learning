@@ -415,24 +415,7 @@ function calculateResults() {
   // Calculate retirement corpus
   const retirementResults = calculateRetirementCorpus(userData, budgetResults);
 
-  // UPDATE: Synchronize budget results with retirement calculation
-  budgetResults.retirement_savings =
-    retirementResults.recommended_monthly_savings;
-  budgetResults.total_savings =
-    retirementResults.recommended_monthly_savings +
-    budgetResults.short_term_savings;
-  budgetResults.total_budget =
-    budgetResults.total_essentials +
-    budgetResults.total_savings +
-    budgetResults.discretionary;
-
-  // Recalculate metrics after update
-  budgetResults.metrics.savings_rate =
-    budgetResults.total_savings / userData.monthlyIncome;
-  budgetResults.metrics.retirement_rate =
-    budgetResults.retirement_savings / userData.monthlyIncome;
-
-  // Calculate investment recommendations with updated retirement savings
+  // Calculate investment recommendations
   const investmentResults = calculateInvestmentRecommendations(
     userData,
     retirementResults
@@ -453,14 +436,34 @@ function calculateResults() {
     optimizationResults,
   };
 
-  // Update the UI with all results
-  updateResultsUI(
+  // Store results for access across the application
+  window.calculationResults = {
     userData,
     budgetResults,
     retirementResults,
     investmentResults,
-    optimizationResults
-  );
+    optimizationResults,
+  };
+
+  // Check if function exists before calling it
+  if (typeof window.updateResultsUI === "function") {
+    window.updateResultsUI(
+      userData,
+      budgetResults,
+      retirementResults,
+      investmentResults,
+      optimizationResults
+    );
+  } else {
+    console.log("Results calculated successfully");
+    // Fallback to basic UI update if function not found
+    document.getElementById("monthly-budget-value").textContent =
+      formatCurrency(budgetResults.total_budget);
+    document.getElementById("retirement-corpus-value").textContent =
+      formatCurrency(retirementResults.total_corpus_required);
+    document.getElementById("monthly-savings-value").textContent =
+      formatCurrency(retirementResults.required_monthly_savings);
+  }
 }
 
 function collectUserInputs() {

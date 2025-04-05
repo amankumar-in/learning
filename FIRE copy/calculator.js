@@ -640,22 +640,6 @@ function calculateRetirementCorpus(userData, budgetResults) {
   );
 
   // Combine all results
-  // Calculate how much is available from budget (from budget results)
-  const budgetAvailableForRetirement =
-    budgetResults.retirement_savings ||
-    userData.monthlyIncome *
-      MAX_RETIREMENT_SAVINGS_PERCENT[userData.incomeTier];
-
-  // Determine if ideal amount can be achieved with current budget
-  const isIdealAchievable =
-    requiredMonthlySavings <= budgetAvailableForRetirement;
-
-  // Set recommended amount based on financial reality and goals
-  // If ideal is achievable, use that amount, otherwise use what's available
-  const recommendedAmount = isIdealAchievable
-    ? requiredMonthlySavings
-    : budgetAvailableForRetirement;
-
   return {
     // Current monthly expenses
     current_monthly_expenses: currentMonthlyExpenses,
@@ -682,9 +666,11 @@ function calculateRetirementCorpus(userData, budgetResults) {
     future_value_of_current_savings: futureValueOfCurrentSavings,
     additional_corpus_needed: additionalCorpusNeeded,
     required_monthly_savings: requiredMonthlySavings,
-    budget_available: budgetAvailableForRetirement,
-    recommended_monthly_savings: recommendedAmount,
-    ideal_achievable: isIdealAchievable,
+    recommended_monthly_savings: Math.min(
+      requiredMonthlySavings,
+      userData.monthlyIncome *
+        MAX_RETIREMENT_SAVINGS_PERCENT[userData.incomeTier]
+    ),
     excess: excess,
 
     // Rate assumptions
