@@ -136,7 +136,7 @@ function calculateBudgetAllocation(userData) {
     // Current-focused: Maintain minimum retirement savings
     retirementSavings = Math.min(
       cappedRetirementSavings,
-      Math.max(minimumSavings, requiredMonthlySavings * 0.6)
+      Math.max(minimumSavings, requiredMonthlySavings * 0.3)
     );
   }
 
