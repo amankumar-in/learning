@@ -47,12 +47,28 @@ const PRIORITY_TEMPLATES = {
         discretionary_multiplier: 0.6,
         min_savings_adjustment: -0.0,
       },
+      VERY_HIGH: {
+        description:
+          "This approach focuses on accelerated wealth building while maintaining a premium lifestyle. Your high income enables rapid wealth accumulation with minimal lifestyle compromise.",
+        retirement_multiplier: 1.65,
+        shortterm_multiplier: 1.35,
+        discretionary_multiplier: 0.6,
+        min_savings_adjustment: -0.0,
+      },
       ULTRA_HIGH: {
         description:
           "This approach focuses on wealth building, legacy planning, and potential early financial independence. Your high income enables significant wealth accumulation while still enjoying a premium lifestyle.",
         retirement_multiplier: 1.7,
         shortterm_multiplier: 1.4,
         discretionary_multiplier: 0.6,
+        min_savings_adjustment: -0.0,
+      },
+      SUPER_HIGH: {
+        description:
+          "This approach emphasizes strategic wealth building, multi-generational planning, and philanthropic considerations. Your exceptional income allows for both aggressive wealth accumulation and an elite lifestyle.",
+        retirement_multiplier: 1.75,
+        shortterm_multiplier: 1.45,
+        discretionary_multiplier: 0.55,
         min_savings_adjustment: -0.0,
       },
     },
@@ -119,9 +135,25 @@ const PRIORITY_TEMPLATES = {
         discretionary_multiplier: 1.0,
         min_savings_adjustment: -0.0,
       },
+      VERY_HIGH: {
+        description:
+          "With your very high income, this approach ensures significant wealth accumulation while allowing you to enjoy a premium lifestyle that reflects your success.",
+        retirement_multiplier: 1.0,
+        shortterm_multiplier: 1.0,
+        discretionary_multiplier: 1.0,
+        min_savings_adjustment: -0.0,
+      },
       ULTRA_HIGH: {
         description:
           "With your exceptional income, this approach ensures significant wealth accumulation while allowing you to enjoy a premium lifestyle commensurate with your success.",
+        retirement_multiplier: 1.0,
+        shortterm_multiplier: 1.0,
+        discretionary_multiplier: 1.0,
+        min_savings_adjustment: -0.0,
+      },
+      SUPER_HIGH: {
+        description:
+          "With your exceptional income, this approach balances significant wealth building with the freedom to enjoy an elite lifestyle and pursue meaningful legacy projects.",
         retirement_multiplier: 1.0,
         shortterm_multiplier: 1.0,
         discretionary_multiplier: 1.0,
@@ -191,6 +223,14 @@ const PRIORITY_TEMPLATES = {
         discretionary_multiplier: 1.6,
         min_savings_adjustment: -0.04, // Reduce minimum by 4%
       },
+      VERY_HIGH: {
+        description:
+          "This approach maximizes your ability to enjoy a truly premium lifestyle today, while still building substantial wealth at a reasonable pace given your very high income.",
+        retirement_multiplier: 0.57,
+        shortterm_multiplier: 0.6,
+        discretionary_multiplier: 1.65,
+        min_savings_adjustment: -0.045, // Reduce minimum by 4.5%
+      },
       ULTRA_HIGH: {
         description:
           "With your exceptional income, this approach creates a truly luxurious lifestyle while still building substantial wealth. You'll maximize life experiences and comfort today.",
@@ -198,6 +238,14 @@ const PRIORITY_TEMPLATES = {
         shortterm_multiplier: 0.6,
         discretionary_multiplier: 1.7,
         min_savings_adjustment: -0.05, // Reduce minimum by 5%
+      },
+      SUPER_HIGH: {
+        description:
+          "With your exceptional income, this approach creates an elite lifestyle with maximum flexibility and experiences, while still building significant wealth due to your income level.",
+        retirement_multiplier: 0.5,
+        shortterm_multiplier: 0.55,
+        discretionary_multiplier: 1.8,
+        min_savings_adjustment: -0.06, // Reduce minimum by 6%
       },
     },
     lifestyle_impact: {

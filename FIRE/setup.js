@@ -713,7 +713,11 @@ function determineIncomeTier(monthlyIncome) {
     return "MIDDLE";
   } else if (monthlyIncome <= INCOME_TIERS.HIGH) {
     return "HIGH";
-  } else {
+  } else if (monthlyIncome <= INCOME_TIERS.VERY_HIGH) {
+    return "VERY_HIGH";
+  } else if (monthlyIncome <= INCOME_TIERS.ULTRA_HIGH) {
     return "ULTRA_HIGH";
+  } else {
+    return "SUPER_HIGH";
   }
 }

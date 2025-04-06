@@ -16,17 +16,17 @@ function calculateBudgetAllocation(userData) {
   // Calculate base essential categories
   let housing =
     BASE_ESSENTIAL_EXPENSES.HOUSING * locationMultiplier * familySizeFactor;
-  const food =
+  let food =
     BASE_ESSENTIAL_EXPENSES.FOOD * locationMultiplier * familySizeFactor;
-  const utilities =
+  let utilities =
     BASE_ESSENTIAL_EXPENSES.UTILITIES * locationMultiplier * familySizeFactor;
-  const transport =
+  let transport =
     BASE_ESSENTIAL_EXPENSES.TRANSPORT * locationMultiplier * familySizeFactor;
-  const healthcare =
+  let healthcare =
     BASE_ESSENTIAL_EXPENSES.HEALTHCARE * locationMultiplier * familySizeFactor;
-  const personal =
+  let personal =
     BASE_ESSENTIAL_EXPENSES.PERSONAL * locationMultiplier * familySizeFactor;
-  const household =
+  let household =
     BASE_ESSENTIAL_EXPENSES.HOUSEHOLD * locationMultiplier * familySizeFactor;
 
   // Education depends on number of children
@@ -421,7 +421,9 @@ function getIncomeTierDisplay(incomeTier) {
     LOWER_MIDDLE: "Lower Middle Income",
     MIDDLE: "Middle Income",
     HIGH: "High Income",
+    VERY_HIGH: "Very High Income",
     ULTRA_HIGH: "Ultra-High Income",
+    SUPER_HIGH: "Super-High Income",
   };
 
   return tierDisplays[incomeTier] || "Middle Income";

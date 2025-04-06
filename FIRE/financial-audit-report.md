@@ -53,7 +53,7 @@ const INCOME_TIERS = {
 };
 ```
 
-### 1.2. Maximum Retirement Savings Percentage Jumps
+### 1.2. Maximum Retirement Savings Percentage Jumps - done
 
 **Problem:** Maximum retirement savings caps have illogical jumps between tiers.
 
