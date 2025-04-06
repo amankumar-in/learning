@@ -3,39 +3,38 @@
 
 function calculateBudgetAllocation(userData) {
   // Step 1: Calculate Base Essential Expenses
-  const locationMultiplier = LOCATION_MULTIPLIERS[userData.locationTier];
-  let familySizeFactor;
+  // Use the family expense calculator for detailed family-specific calculations
+  const familyExpenses = FamilyExpenseCalculator.calculateFamilyExpenses(
+    userData,
+    BASE_ESSENTIAL_EXPENSES
+  );
 
-  // Apply family size factor with special handling for large families
-  if (userData.familySize <= 5) {
-    familySizeFactor = FAMILY_SIZE_FACTORS[userData.familySize];
-  } else {
-    // For families larger than 5, use formula: 1.5 + 0.1 * (N-5)
-    familySizeFactor = 1.5 + 0.1 * (userData.familySize - 5);
+  // Get the calculated expenses
+  let housing = familyExpenses.housing;
+  let food = familyExpenses.food;
+  let utilities = familyExpenses.utilities;
+  let transport = familyExpenses.transport;
+  let healthcare = familyExpenses.healthcare;
+  let education = familyExpenses.education;
+  let personal = familyExpenses.personal;
+  let household = familyExpenses.household;
+
+  // IMPORTANT: Keep the existing housing situation adjustments
+  if (userData.housingStatus === "owned_fully") {
+    // Calculate adjustment amount before reducing
+    housingAdjustment = housing * 0.7; // 70% savings
+
+    // Remove rent component, add property tax and higher maintenance
+    housing = housing * 0.3; // Reduces to just maintenance and taxes
+  } else if (userData.housingStatus === "loan") {
+    // Check if EMI is provided by user
+    if (userData.housingEmi > 0) {
+      housing = userData.housingEmi + housing * 0.15; // EMI + maintenance
+    } else {
+      // Estimate EMI based on typical home values in this location tier
+      housing = estimateTypicalEmi(userData.locationTier) + housing * 0.15;
+    }
   }
-
-  // Calculate base essential categories
-  let housing =
-    BASE_ESSENTIAL_EXPENSES.HOUSING * locationMultiplier * familySizeFactor;
-  let food =
-    BASE_ESSENTIAL_EXPENSES.FOOD * locationMultiplier * familySizeFactor;
-  let utilities =
-    BASE_ESSENTIAL_EXPENSES.UTILITIES * locationMultiplier * familySizeFactor;
-  let transport =
-    BASE_ESSENTIAL_EXPENSES.TRANSPORT * locationMultiplier * familySizeFactor;
-  let healthcare =
-    BASE_ESSENTIAL_EXPENSES.HEALTHCARE * locationMultiplier * familySizeFactor;
-  let personal =
-    BASE_ESSENTIAL_EXPENSES.PERSONAL * locationMultiplier * familySizeFactor;
-  let household =
-    BASE_ESSENTIAL_EXPENSES.HOUSEHOLD * locationMultiplier * familySizeFactor;
-
-  // Education depends on number of children
-  const childrenCount = getChildrenCount(userData.familyComposition);
-  let education =
-    BASE_ESSENTIAL_EXPENSES.EDUCATION_PER_CHILD *
-    childrenCount *
-    locationMultiplier;
 
   // Step 2: Apply Housing Situation Adjustments
   let housingAdjustment = 0;
@@ -361,6 +360,13 @@ function calculateBudgetAllocation(userData) {
     rent_or_emi: housing * 0.85,
     maintenance: housing * 0.1,
     property_tax: housing * 0.05,
+    // Include additional details from family calculator
+    bedrooms_required: familyExpenses.housing_breakdown
+      ? familyExpenses.housing_breakdown.bedrooms
+      : 0,
+    housing_adjustment_factor: familyExpenses.housing_breakdown
+      ? familyExpenses.housing_breakdown.housingAdjustment
+      : 1,
   };
 
   const foodBreakdown = {
@@ -368,6 +374,12 @@ function calculateBudgetAllocation(userData) {
     dairy: food * 0.15,
     eating_out: food * 0.15,
     ordering_in: food * 0.1,
+    age_specific: familyExpenses.food_breakdown
+      ? familyExpenses.food_breakdown
+      : {},
+    scaling_factor: familyExpenses.food_breakdown
+      ? familyExpenses.food_breakdown.scalingFactor
+      : 1,
   };
 
   const utilitiesBreakdown = {
@@ -382,6 +394,9 @@ function calculateBudgetAllocation(userData) {
     maintenance: transport * 0.2,
     public_transport: transport * 0.3,
     rideshare_taxi: transport * 0.1,
+    purpose_specific: familyExpenses.transport_breakdown
+      ? familyExpenses.transport_breakdown
+      : {},
   };
 
   const healthcareBreakdown = {
@@ -389,6 +404,10 @@ function calculateBudgetAllocation(userData) {
     medications: healthcare * 0.2,
     doctor_visits: healthcare * 0.3,
     wellness: healthcare * 0.1,
+    // Add age-specific breakdown
+    age_specific: familyExpenses.healthcare_breakdown
+      ? familyExpenses.healthcare_breakdown
+      : {},
   };
 
   const educationBreakdown = {
@@ -396,6 +415,25 @@ function calculateBudgetAllocation(userData) {
     supplies: education * 0.1,
     tutoring: education * 0.1,
     extracurricular: education * 0.1,
+    // Add detailed age-specific breakdown
+    preschool: familyExpenses.education_breakdown
+      ? familyExpenses.education_breakdown.preschool || 0
+      : 0,
+    primary: familyExpenses.education_breakdown
+      ? familyExpenses.education_breakdown.primary || 0
+      : 0,
+    middle: familyExpenses.education_breakdown
+      ? familyExpenses.education_breakdown.middle || 0
+      : 0,
+    secondary: familyExpenses.education_breakdown
+      ? familyExpenses.education_breakdown.secondary || 0
+      : 0,
+    college: familyExpenses.education_breakdown
+      ? familyExpenses.education_breakdown.college || 0
+      : 0,
+    higher_education: familyExpenses.education_breakdown
+      ? familyExpenses.education_breakdown.higher_education || 0
+      : 0,
   };
 
   const personalBreakdown = {

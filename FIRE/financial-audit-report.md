@@ -702,7 +702,7 @@ if (userData.incomeVolatility === "HIGH") {
 }
 ```
 
-### 6.3. Family Composition Has Minimal Impact
+### 6.3. Family Composition Has Minimal Impact - done
 
 **Problem:** Family composition details are collected but barely affect calculations.
 
