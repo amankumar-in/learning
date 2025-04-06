@@ -9,8 +9,10 @@ const INCOME_TIERS = {
   LOW: 30000, // ₹15,001-30,000/month
   LOWER_MIDDLE: 60000, // ₹30,001-60,000/month
   MIDDLE: 150000, // ₹60,001-1,50,000/month
-  HIGH: 1000000, // ₹1,50,001-10,00,000/month
-  ULTRA_HIGH: Infinity, // ₹10,00,000+/month
+  HIGH: 300000, // ₹1,50,001-3,00,000/month
+  VERY_HIGH: 600000, // ₹3,00,001-6,00,000/month
+  ULTRA_HIGH: 1000000, // ₹6,00,001-10,00,000/month
+  SUPER_HIGH: Infinity, // ₹10,00,000+/month
 };
 
 /**
@@ -20,10 +22,12 @@ const INCOME_TIERS = {
 const MAX_RETIREMENT_SAVINGS_PERCENT = {
   VERY_LOW: 0.05, // Max 5% of income for very low income
   LOW: 0.1, // Max 10% for low income
-  LOWER_MIDDLE: 0.15, // Max 15% for lower middle income
-  MIDDLE: 0.5, // Max 50% for middle income
-  HIGH: 0.5, // Max 50% for high income
-  ULTRA_HIGH: 0.5, // Max 50% for ultra high income
+  LOWER_MIDDLE: 0.2, // Max 20% for lower middle income (was 15%)
+  MIDDLE: 0.3, // Max 30% for middle income
+  HIGH: 0.4, // Max 40% for high income (was 35%)
+  VERY_HIGH: 0.45, // Max 45% for very high income (was 40%)
+  ULTRA_HIGH: 0.5, // Max 50% for ultra high income (was 45%)
+  SUPER_HIGH: 0.5, // Max 50% for super high income
 };
 
 /**
@@ -35,8 +39,10 @@ const EMERGENCY_FUND_TARGETS = {
   LOW: 3, // 3 months for low income
   LOWER_MIDDLE: 4, // 4 months for lower middle income
   MIDDLE: 6, // 6 months for middle income
-  HIGH: 9, // 9 months for high income
+  HIGH: 8, // 8 months for high income
+  VERY_HIGH: 10, // 10 months for very high income
   ULTRA_HIGH: 12, // 12 months for ultra high income
+  SUPER_HIGH: 15, // 15 months for super high income
 };
 
 /**
@@ -96,7 +102,9 @@ const MINIMUM_SAVINGS_RATES = {
   LOWER_MIDDLE: 0.1, // 10% minimum for lower middle income
   MIDDLE: 0.15, // 15% minimum for middle income
   HIGH: 0.2, // 20% minimum for high income
+  VERY_HIGH: 0.225, // 22.5% minimum for very high income
   ULTRA_HIGH: 0.25, // 25% minimum for ultra high income
+  SUPER_HIGH: 0.275, // 27.5% minimum for super high income
 };
 
 /**
@@ -105,7 +113,7 @@ const MINIMUM_SAVINGS_RATES = {
 const INVESTMENT_RETURN_RATES = {
   CONSERVATIVE: {
     PRE_RETIREMENT: 0.07, // 7% annual return before retirement
-    POST_RETIREMENT: 0.05, // 5% annual return during retirement
+    POST_RETIREMENT: 0.07, // 7% annual return during retirement
   },
   MODERATE: {
     PRE_RETIREMENT: 0.09, // 9% annual return before retirement

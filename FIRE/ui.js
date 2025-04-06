@@ -1017,6 +1017,7 @@ function updateBudgetBreakdownTable(userData, budgetResults) {
     transport: "Transportation",
     healthcare: "Healthcare",
     education: "Education",
+    debt_payment: "Debt Payment", // latest change
     personal: "Personal Care",
     household: "Household",
     retirement_savings: "Retirement Savings",

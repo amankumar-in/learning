@@ -361,7 +361,52 @@
             </button>
           </div>
         </div>
+        <!-- After the priority selection grid in form-step 3 -->
+        <div id="priority-explanation" class="mt-4 p-4 bg-indigo-50 rounded-lg">
+          <h4 class="font-medium mb-2" id="priority-explanation-title">
+            Understanding Your Priority
+          </h4>
+          <div id="priority-explanation-text" class="text-sm">
+            <!-- Explanation content will be dynamically added -->
+          </div>
+          <div class="mt-3 grid grid-cols-3 gap-2 text-xs">
+            <div class="bg-blue-100 p-2 rounded-lg">
+              <div class="font-medium">Retirement</div>
+              <div id="priority-retirement-value">-</div>
+            </div>
+            <div class="bg-green-100 p-2 rounded-lg">
+              <div class="font-medium">Short-term Savings</div>
+              <div id="priority-shortterm-value">-</div>
+            </div>
+            <div class="bg-amber-100 p-2 rounded-lg">
+              <div class="font-medium">Discretionary</div>
+              <div id="priority-discretionary-value">-</div>
+            </div>
+          </div>
+          <div class="mt-3 flex justify-center">
+            <div class="w-3/4 text-center">
+              <div class="w-full bg-gray-200 h-1 mb-1">
+                <div class="bg-blue-500 h-1" style="width: 33.3%"></div>
+              </div>
+              <div class="flex justify-between text-xs text-gray-500">
+                <span>Current-Focused</span>
+                <span>Balanced</span>
+                <span>Future-Focused</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
+        <!-- Add a real-world examples section -->
+        <div
+          id="priority-examples"
+          class="mt-2 p-3 bg-blue-50 rounded-lg text-sm hidden"
+        >
+          <h5 class="font-medium mb-1">How this impacts your life:</h5>
+          <div id="priority-examples-content">
+            <!-- Examples will be dynamically added -->
+          </div>
+        </div>
         <!-- Step 4: Results Dashboard -->
         <div class="form-step" data-step="4">
           <div class="dashboard">
@@ -577,6 +622,8 @@
     </footer>
 
     <script src="constants.js"></script>
+    <script src="priority-templates.js"></script>
+    <script src="priority-calculator.js"></script>
     <script src="setup.js"></script>
     <script src="calculator.js"></script>
     <script src="engine.js"></script>

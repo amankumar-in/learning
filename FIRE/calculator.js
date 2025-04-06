@@ -455,7 +455,27 @@ function calculateBudgetAllocation(userData) {
       )} due to fully owned home, increasing your overall financial flexibility.`
     );
   }
+  // latest change
+  // Add debt management logic
+  let debtPayment = 0;
+  const debtPaymentBreakdown = { minimum_payment: 0, additional_payment: 0 };
 
+  if (userData.currentDebt > userData.monthlyIncome * 3) {
+    // High debt situation, adjust allocations
+    debtPayment = discretionary * 0.2 + shortTermSavings * 0.1;
+    discretionary = discretionary * 0.8;
+    shortTermSavings = shortTermSavings * 0.9;
+
+    // Create debt payment breakdown
+    debtPaymentBreakdown.minimum_payment = debtPayment * 0.7;
+    debtPaymentBreakdown.additional_payment = debtPayment * 0.3;
+
+    // Add guidance note about debt management
+    guidanceNotes.push(
+      "High debt detected - allocating funds for accelerated debt repayment."
+    );
+  }
+  // =============
   // Combine all categories into a budget plan
   const budget = {
     // Main category totals
@@ -470,6 +490,7 @@ function calculateBudgetAllocation(userData) {
     retirement_savings: retirementSavings,
     short_term_savings: shortTermSavings,
     discretionary,
+    debt_payment: debtPayment, // latest change
 
     // Calculated totals
     total_essentials: adjustedTotalEssentials, // Use adjustedTotalEssentials instead
@@ -478,7 +499,8 @@ function calculateBudgetAllocation(userData) {
       adjustedTotalEssentials +
       retirementSavings +
       shortTermSavings +
-      discretionary,
+      discretionary +
+      debtPayment, // latest change
 
     // Deficit if any
     deficit,
@@ -493,6 +515,7 @@ function calculateBudgetAllocation(userData) {
       transport: transportBreakdown,
       healthcare: healthcareBreakdown,
       education: educationBreakdown,
+      debt_payment: debtPaymentBreakdown, // latest change
       personal: personalBreakdown,
       household: householdBreakdown,
       discretionary: discretionaryBreakdown,
@@ -505,6 +528,8 @@ function calculateBudgetAllocation(userData) {
         (retirementSavings + shortTermSavings) / userData.monthlyIncome,
       essential_rate: totalEssentials / userData.monthlyIncome,
       discretionary_rate: discretionary / userData.monthlyIncome,
+      debt_payment_rate: debtPayment / userData.monthlyIncome, // latest change
+
       retirement_rate: retirementSavings / userData.monthlyIncome,
       required_savings_rate: requiredSavingsRate,
       capped_savings_rate: actualSavingsRate,

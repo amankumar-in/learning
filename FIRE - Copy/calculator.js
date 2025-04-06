@@ -1,3 +1,4 @@
+// code - 5567
 // === BUDGET ALLOCATION ENGINE ===
 
 function calculateBudgetAllocation(userData) {
@@ -16,37 +17,54 @@ function calculateBudgetAllocation(userData) {
   // Calculate base essential categories
   let housing =
     BASE_ESSENTIAL_EXPENSES.HOUSING * locationMultiplier * familySizeFactor;
-  const food =
+  let food =
     BASE_ESSENTIAL_EXPENSES.FOOD * locationMultiplier * familySizeFactor;
-  const utilities =
+  let utilities =
     BASE_ESSENTIAL_EXPENSES.UTILITIES * locationMultiplier * familySizeFactor;
-  const transport =
+  let transport =
     BASE_ESSENTIAL_EXPENSES.TRANSPORT * locationMultiplier * familySizeFactor;
-  const healthcare =
+  let healthcare =
     BASE_ESSENTIAL_EXPENSES.HEALTHCARE * locationMultiplier * familySizeFactor;
-  const personal =
+  let personal =
     BASE_ESSENTIAL_EXPENSES.PERSONAL * locationMultiplier * familySizeFactor;
-  const household =
+  let household =
     BASE_ESSENTIAL_EXPENSES.HOUSEHOLD * locationMultiplier * familySizeFactor;
 
   // Education depends on number of children
   const childrenCount = getChildrenCount(userData.familyComposition);
-  const education =
+  let education =
     BASE_ESSENTIAL_EXPENSES.EDUCATION_PER_CHILD *
     childrenCount *
     locationMultiplier;
 
   // Step 2: Apply Housing Situation Adjustments
+  let housingAdjustment = 0;
+
   if (userData.housingStatus === "owned_fully") {
+    // Calculate adjustment amount before reducing
+    housingAdjustment = housing * 0.7; // 70% savings
+
     // Remove rent component, add property tax and higher maintenance
     housing = housing * 0.3; // Reduces to just maintenance and taxes
   } else if (userData.housingStatus === "loan") {
     // Check if EMI is provided by user
     if (userData.housingEmi > 0) {
+      // Validate EMI is not too high relative to income
+      const maxReasonableEmi = userData.monthlyIncome * 0.4; // 40% DTI ratio
+      if (userData.housingEmi > maxReasonableEmi) {
+        // Add to guidance notes rather than modify (provide information, not force change)
+        guidanceNotes.push(
+          `Your housing EMI is ${Math.round(
+            (userData.housingEmi / userData.monthlyIncome) * 100
+          )}% of income, which exceeds recommended 40% debt-to-income ratio.`
+        );
+      }
+
       housing = userData.housingEmi + housing * 0.15; // EMI + maintenance
     } else {
       // Estimate EMI based on typical home values in this location tier
-      housing = estimateTypicalEmi(userData.locationTier) + housing * 0.15;
+      const estimatedEmi = estimateTypicalEmi(userData.locationTier);
+      housing = estimatedEmi + housing * 0.15;
     }
   }
 
@@ -60,6 +78,174 @@ function calculateBudgetAllocation(userData) {
     education +
     personal +
     household;
+
+  // Initialize guidance notes array
+  let guidanceNotes = [];
+  // Step 2.5: Reconcile calculated essentials with user's reported expenses
+  let adjustedTotalEssentials = totalEssentials;
+
+  if (userData.monthlyExpenses > 0) {
+    // Get user's input expenses
+    const userExpenses = userData.monthlyExpenses;
+
+    // Estimate what portion of user expenses are likely essentials based on income tier
+    let essentialRatio;
+    if (userData.incomeTier === "VERY_LOW" || userData.incomeTier === "LOW") {
+      essentialRatio = 0.85; // 85% of expenses are essential at lower incomes
+    } else if (
+      userData.incomeTier === "LOWER_MIDDLE" ||
+      userData.incomeTier === "MIDDLE"
+    ) {
+      essentialRatio = 0.75; // 75% at middle incomes
+    } else {
+      essentialRatio = 0.65; // 65% at higher incomes
+    }
+
+    // Estimate user's essential expenses
+    const estimatedUserEssentials = Math.min(
+      userExpenses * essentialRatio,
+      userExpenses
+    );
+
+    // Compare with system-calculated essentials
+    if (
+      totalEssentials > userData.monthlyIncome &&
+      estimatedUserEssentials < totalEssentials
+    ) {
+      // User's estimated essentials are lower and within income - use their implied number
+      const scalingFactor = estimatedUserEssentials / totalEssentials;
+
+      // Create copies of the variables instead of modifying them directly
+      housing = housing * scalingFactor;
+      food = food * scalingFactor;
+      utilities = utilities * scalingFactor;
+      transport = transport * scalingFactor;
+      healthcare = healthcare * scalingFactor;
+      education = education * scalingFactor;
+      personal = personal * scalingFactor;
+      household = household * scalingFactor;
+
+      // Recalculate total essentials
+      adjustedTotalEssentials =
+        housing +
+        food +
+        utilities +
+        transport +
+        healthcare +
+        education +
+        personal +
+        household;
+
+      // Add guidance note about the adjustment
+      guidanceNotes.push(
+        "We've adjusted essential expenses to align with your reported monthly spending"
+      );
+    }
+  }
+
+  // Check if income is insufficient for basic essentials
+  const incomeDeficit = adjustedTotalEssentials - userData.monthlyIncome;
+  let scaledHousing = housing;
+  let scaledFood = food;
+  let scaledUtilities = utilities;
+  let scaledTransport = transport;
+  let scaledHealthcare = healthcare;
+  let scaledEducation = education;
+  let scaledPersonal = personal;
+  let scaledHousehold = household;
+  let scaledTotalEssentials = adjustedTotalEssentials;
+  let survivalMode = false;
+
+  if (incomeDeficit > 0) {
+    // Set survival mode flag if essentials still exceed income after user reconciliation
+    survivalMode = true;
+
+    // Establish minimum survival thresholds based on location tier
+    const locationFactor = LOCATION_MULTIPLIERS[userData.locationTier];
+    const minFoodPerPerson = 2000 * locationFactor; // Minimum food budget per person
+    const minFoodTotal = minFoodPerPerson * userData.familySize;
+
+    // Prioritize critical categories for survival
+    // 1. Food - ensure minimum nutrition
+    scaledFood = Math.max(minFoodTotal, food * 0.8);
+
+    // 2. Housing - ensure basic shelter (but may need support systems)
+    const minHousingPerPerson = 1500 * locationFactor;
+    const minHousingTotal = minHousingPerPerson * userData.familySize;
+    scaledHousing = Math.max(minHousingTotal, housing * 0.7);
+
+    // 3. Healthcare - maintain minimum health needs
+    const minHealthcare = 1000 * locationFactor * userData.familySize;
+    scaledHealthcare = Math.max(minHealthcare, healthcare * 0.9);
+
+    // Reduce other categories more aggressively
+    // Scale utilities, transport, education, personal, household down more dramatically
+    const remainingIncome =
+      userData.monthlyIncome - (scaledFood + scaledHousing + scaledHealthcare);
+
+    if (remainingIncome > 0) {
+      // Distribute remaining income proportionally to other categories
+      const otherCategoriesTotal =
+        utilities + transport + education + personal + household;
+      const remainingFactor = Math.min(
+        1,
+        remainingIncome / otherCategoriesTotal
+      );
+
+      scaledUtilities = utilities * remainingFactor;
+      scaledTransport = transport * remainingFactor;
+      scaledEducation = education * remainingFactor;
+      scaledPersonal = personal * remainingFactor;
+      scaledHousehold = household * remainingFactor;
+    } else {
+      // Extreme case - not enough for food, housing, and healthcare
+      // Further reduce these categories while adding guidance notes
+      const availableIncome = userData.monthlyIncome;
+      const essentialTotal = scaledFood + scaledHousing + scaledHealthcare;
+      const severeScalingFactor = availableIncome / essentialTotal;
+
+      scaledFood = scaledFood * severeScalingFactor;
+      scaledHousing = scaledHousing * severeScalingFactor;
+      scaledHealthcare = scaledHealthcare * severeScalingFactor;
+
+      scaledUtilities = 0;
+      scaledTransport = 0;
+      scaledEducation = 0;
+      scaledPersonal = 0;
+      scaledHousehold = 0;
+
+      guidanceNotes.push("External support needed for basic survival");
+      guidanceNotes.push("Explore government assistance programs");
+      guidanceNotes.push("Consider community support resources");
+      guidanceNotes.push("Income increase critically needed");
+    }
+
+    // Recalculate total essentials
+    scaledTotalEssentials =
+      scaledHousing +
+      scaledFood +
+      scaledUtilities +
+      scaledTransport +
+      scaledHealthcare +
+      scaledEducation +
+      scaledPersonal +
+      scaledHousehold;
+
+    // Add guidance notes based on specific situations
+    if (scaledHousing < housing * 0.7) {
+      guidanceNotes.push(
+        "Housing assistance or shared accommodation strongly recommended"
+      );
+    }
+
+    if (scaledFood < minFoodTotal) {
+      guidanceNotes.push("Food security resources and food banks recommended");
+    }
+
+    if (scaledHealthcare < healthcare * 0.9) {
+      guidanceNotes.push("Seek free/subsidized healthcare services");
+    }
+  }
 
   // Step 3: Calculate Appropriate Savings Rate
   // Get minimum savings rate based on income tier
@@ -82,7 +268,7 @@ function calculateBudgetAllocation(userData) {
   // Calculate required monthly savings for retirement
   const retirementCorpusResult = calculateRetirementCorpusQuick(
     userData,
-    totalEssentials
+    adjustedTotalEssentials
   );
   const requiredMonthlySavings = retirementCorpusResult.requiredMonthlySavings;
   const requiredSavingsRate = requiredMonthlySavings / userData.monthlyIncome;
@@ -99,8 +285,8 @@ function calculateBudgetAllocation(userData) {
   const cappedRetirementSavings = userData.monthlyIncome * actualSavingsRate;
 
   // Step 4: Calculate disposable income after essentials
-  const disposableIncome = userData.monthlyIncome - totalEssentials;
-
+  // Include housingAdjustment to account for owned home savings
+  const disposableIncome = userData.monthlyIncome - adjustedTotalEssentials;
   // Calculate minimum savings amount
   const minimumSavings = userData.monthlyIncome * minSavingsRate;
 
@@ -110,58 +296,56 @@ function calculateBudgetAllocation(userData) {
   let discretionary;
   let deficit = 0;
 
-  // Calculate retirement savings based on priority
-  if (userData.financialPriority === "future_focused") {
-    // Future-focused: Prioritize retirement savings
-    if (disposableIncome > minimumSavings) {
-      retirementSavings = Math.min(
-        cappedRetirementSavings,
-        Math.max(requiredMonthlySavings, disposableIncome * 0.6)
-      );
-    } else {
-      retirementSavings = minimumSavings;
-    }
-  } else if (userData.financialPriority === "balanced") {
-    // Balanced: Equal importance to present and future
-    if (disposableIncome > minimumSavings) {
-      retirementSavings = Math.min(
-        cappedRetirementSavings,
-        Math.max(requiredMonthlySavings, disposableIncome * 0.4)
-      );
-    } else {
-      retirementSavings = minimumSavings;
-    }
-  } else {
-    // current_focused
-    // Current-focused: Maintain minimum retirement savings
-    retirementSavings = Math.min(
-      cappedRetirementSavings,
-      Math.max(minimumSavings, requiredMonthlySavings * 0.3)
-    );
-  }
+  // Get priority-specific budget adjustments from utility
+  const priorityAdjustments = applyPriorityAdjustments(userData, {
+    disposableIncome: disposableIncome,
+    requiredMonthlySavings: requiredMonthlySavings,
+    minimumSavings: minimumSavings,
+    cappedRetirementSavings: cappedRetirementSavings,
+  });
 
-  // Check if retirement savings exceeds disposable income
+  // Apply adjusted values
+  retirementSavings = priorityAdjustments.retirement_savings;
+
+  /// Calculate emergency fund target for deficit scenarios
+  const monthlyExpenses = userData.monthlyExpenses || totalEssentials;
+  const emergencyFundTarget =
+    monthlyExpenses * EMERGENCY_FUND_TARGETS[userData.incomeTier];
+  const estimatedEmergencyFund = userData.currentSavings
+    ? userData.currentSavings * 0.3
+    : 0;
+  const emergencyFundGap = Math.max(
+    0,
+    emergencyFundTarget - estimatedEmergencyFund
+  );
+  const minEmergencyAllocation =
+    emergencyFundGap > 0
+      ? Math.min(disposableIncome * 0.2, emergencyFundGap / 24)
+      : 0;
+
+  // If retirement savings exceeds disposable income
   if (retirementSavings > disposableIncome) {
-    deficit = retirementSavings - disposableIncome;
-    retirementSavings = disposableIncome;
+    // If we have an emergency fund gap, allocate the minimum required amount
+    if (minEmergencyAllocation > 0) {
+      // Ensure retirement savings has room for minimum emergency allocation
+      retirementSavings = Math.max(
+        0,
+        disposableIncome - minEmergencyAllocation
+      );
+      shortTermSavings = minEmergencyAllocation;
+      deficit = retirementSavings - disposableIncome + minEmergencyAllocation;
+    } else {
+      // No emergency fund gap, proceed as before
+      deficit = retirementSavings - disposableIncome;
+      retirementSavings = disposableIncome;
+      shortTermSavings = 0;
+    }
 
-    // Note: We always calculate short-term savings and discretionary, even with deficit
-    // This addresses the bug in the original implementation
-    shortTermSavings = 0;
     discretionary = 0;
   } else {
-    // Calculate remaining funds for discretionary spending
-    const remainingFunds = disposableIncome - retirementSavings;
-
-    // Adjust allocations based on income tier
-    const stSavingsPercent = getShortTermSavingsPercent(
-      userData.incomeTier,
-      userData.financialPriority
-    );
-
-    // Allocate to short-term savings and discretionary based on priority and income tier
-    shortTermSavings = remainingFunds * stSavingsPercent;
-    discretionary = remainingFunds * (1 - stSavingsPercent);
+    // Use adjusted values from priority calculator
+    shortTermSavings = priorityAdjustments.short_term_savings;
+    discretionary = priorityAdjustments.discretionary;
   }
 
   // Step 5: Calculate Category and Subcategory Allocations
@@ -262,6 +446,16 @@ function calculateBudgetAllocation(userData) {
     };
   }
 
+  // Reallocate housing adjustment for fully owned homes
+  if (housingAdjustment > 0) {
+    // Add guidance note
+    guidanceNotes.push(
+      `Your housing costs are reduced by ${formatCurrency(
+        housingAdjustment
+      )} due to fully owned home, increasing your overall financial flexibility.`
+    );
+  }
+
   // Combine all categories into a budget plan
   const budget = {
     // Main category totals
@@ -278,14 +472,19 @@ function calculateBudgetAllocation(userData) {
     discretionary,
 
     // Calculated totals
-    total_essentials: totalEssentials,
+    total_essentials: adjustedTotalEssentials, // Use adjustedTotalEssentials instead
     total_savings: retirementSavings + shortTermSavings,
     total_budget:
-      totalEssentials + retirementSavings + shortTermSavings + discretionary,
+      adjustedTotalEssentials +
+      retirementSavings +
+      shortTermSavings +
+      discretionary,
 
     // Deficit if any
     deficit,
-
+    // Priority impacts information
+    priority_impacts: priorityAdjustments.priority_impacts,
+    adjusted_minimum_rate: priorityAdjustments.adjusted_minimum_rate,
     // Category breakdowns
     category_breakdown: {
       housing: housingBreakdown,
@@ -314,6 +513,11 @@ function calculateBudgetAllocation(userData) {
     // User's income tier for reference
     income_tier: userData.incomeTier,
     income_tier_display: getIncomeTierDisplay(userData.incomeTier),
+
+    // Add at the end of the budget object
+    survival_mode: survivalMode,
+    guidance_notes: guidanceNotes,
+    original_essentials: totalEssentials,
   };
 
   return budget;
@@ -344,11 +548,19 @@ function calculateRetirementCorpusQuick(userData, totalEssentials) {
   const annualExpenses = retirementMonthlyExpenses * 12;
 
   // Get appropriate withdrawal rate based on risk profile
-  const withdrawalRate = SAFE_WITHDRAWAL_RATES[userData.riskTolerance];
+  const baseWithdrawalRate = SAFE_WITHDRAWAL_RATES[userData.riskTolerance];
+
+  // Calculate years in retirement
+  const yearsInRetirement = userData.lifeExpectancy - userData.retirementAge;
+
+  // Adjust withdrawal rate based on expected retirement duration
+  const longevityFactor = Math.max(0.6, Math.min(1.5, 30 / yearsInRetirement));
+  const safeWithdrawalRate = baseWithdrawalRate * longevityFactor;
 
   // Calculate corpus needed
-  const baseCorpus = annualExpenses / withdrawalRate;
-  const buffer = annualExpenses * 2; // 2 years buffer
+  const baseCorpus = annualExpenses / safeWithdrawalRate;
+  const bufferYears = Math.max(2, yearsInRetirement * 0.1); // At least 2 years or 10% of retirement
+  const buffer = annualExpenses * bufferYears;
   const totalCorpusRequired = baseCorpus + buffer;
 
   // Calculate future value of current savings
@@ -449,7 +661,9 @@ function getIncomeTierDisplay(incomeTier) {
     LOWER_MIDDLE: "Lower Middle Income",
     MIDDLE: "Middle Income",
     HIGH: "High Income",
+    VERY_HIGH: "Very High Income",
     ULTRA_HIGH: "Ultra-High Income",
+    SUPER_HIGH: "Super-High Income",
   };
 
   return tierDisplays[incomeTier] || "Middle Income";
@@ -535,15 +749,22 @@ function calculateRetirementCorpus(userData, budgetResults) {
   // Convert to annual expenses
   const futureAnnualExpenses = futureMonthlyExpenses * 12;
 
-  // Get appropriate safe withdrawal rate based on risk profile
-  const safeWithdrawalRate = SAFE_WITHDRAWAL_RATES[userData.riskTolerance];
+  // Get appropriate withdrawal rate based on risk profile
+  const baseWithdrawalRate = SAFE_WITHDRAWAL_RATES[userData.riskTolerance];
+
+  // Calculate years in retirement
+  const yearsInRetirement = userData.lifeExpectancy - userData.retirementAge;
+
+  // Adjust withdrawal rate based on expected retirement duration
+  const longevityFactor = Math.max(0.6, Math.min(1.5, 30 / yearsInRetirement));
+  const safeWithdrawalRate = baseWithdrawalRate * longevityFactor;
 
   // Base corpus calculation
   const baseCorpus = futureAnnualExpenses / safeWithdrawalRate;
 
   // Add buffer for emergencies and healthcare (2 years of expenses)
-  const buffer = futureAnnualExpenses * 2;
-
+  const bufferYears = Math.max(2, yearsInRetirement * 0.1); // At least 2 years or 10% of retirement
+  const buffer = futureAnnualExpenses * bufferYears;
   // Calculate total corpus required
   const totalCorpusRequired = baseCorpus + buffer;
 
@@ -953,7 +1174,8 @@ function calculateScenario(
 
   // Calculate corpus needed using withdrawal rate
   const baseCorpus = annualExpenses / withdrawalRate;
-  const buffer = annualExpenses * 2;
+  const bufferYears = Math.max(2, yearsInRetirement * 0.1); // At least 2 years or 10% of retirement
+  const buffer = annualExpenses * bufferYears;
   const totalCorpus = baseCorpus + buffer;
 
   // Calculate future value of current savings
