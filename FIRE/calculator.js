@@ -1,3 +1,4 @@
+// code - 3344
 // === BUDGET ALLOCATION ENGINE ===
 
 function calculateBudgetAllocation(userData) {
@@ -488,11 +489,19 @@ function calculateRetirementCorpusQuick(userData, totalEssentials) {
   const annualExpenses = retirementMonthlyExpenses * 12;
 
   // Get appropriate withdrawal rate based on risk profile
-  const withdrawalRate = SAFE_WITHDRAWAL_RATES[userData.riskTolerance];
+  const baseWithdrawalRate = SAFE_WITHDRAWAL_RATES[userData.riskTolerance];
+
+  // Calculate years in retirement
+  const yearsInRetirement = userData.lifeExpectancy - userData.retirementAge;
+
+  // Adjust withdrawal rate based on expected retirement duration
+  const longevityFactor = Math.max(0.6, Math.min(1.5, 30 / yearsInRetirement));
+  const safeWithdrawalRate = baseWithdrawalRate * longevityFactor;
 
   // Calculate corpus needed
-  const baseCorpus = annualExpenses / withdrawalRate;
-  const buffer = annualExpenses * 2; // 2 years buffer
+  const baseCorpus = annualExpenses / safeWithdrawalRate;
+  const bufferYears = Math.max(2, yearsInRetirement * 0.1); // At least 2 years or 10% of retirement
+  const buffer = annualExpenses * bufferYears;
   const totalCorpusRequired = baseCorpus + buffer;
 
   // Calculate future value of current savings
@@ -681,15 +690,22 @@ function calculateRetirementCorpus(userData, budgetResults) {
   // Convert to annual expenses
   const futureAnnualExpenses = futureMonthlyExpenses * 12;
 
-  // Get appropriate safe withdrawal rate based on risk profile
-  const safeWithdrawalRate = SAFE_WITHDRAWAL_RATES[userData.riskTolerance];
+  // Get appropriate withdrawal rate based on risk profile
+  const baseWithdrawalRate = SAFE_WITHDRAWAL_RATES[userData.riskTolerance];
+
+  // Calculate years in retirement
+  const yearsInRetirement = userData.lifeExpectancy - userData.retirementAge;
+
+  // Adjust withdrawal rate based on expected retirement duration
+  const longevityFactor = Math.max(0.6, Math.min(1.5, 30 / yearsInRetirement));
+  const safeWithdrawalRate = baseWithdrawalRate * longevityFactor;
 
   // Base corpus calculation
   const baseCorpus = futureAnnualExpenses / safeWithdrawalRate;
 
   // Add buffer for emergencies and healthcare (2 years of expenses)
-  const buffer = futureAnnualExpenses * 2;
-
+  const bufferYears = Math.max(2, yearsInRetirement * 0.1); // At least 2 years or 10% of retirement
+  const buffer = futureAnnualExpenses * bufferYears;
   // Calculate total corpus required
   const totalCorpusRequired = baseCorpus + buffer;
 
@@ -1099,7 +1115,8 @@ function calculateScenario(
 
   // Calculate corpus needed using withdrawal rate
   const baseCorpus = annualExpenses / withdrawalRate;
-  const buffer = annualExpenses * 2;
+  const bufferYears = Math.max(2, yearsInRetirement * 0.1); // At least 2 years or 10% of retirement
+  const buffer = annualExpenses * bufferYears;
   const totalCorpus = baseCorpus + buffer;
 
   // Calculate future value of current savings

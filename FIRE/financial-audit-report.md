@@ -312,7 +312,7 @@ function calculateDynamicSWR(userData, marketCondition) {
 }
 ```
 
-### 3.3. Life Expectancy Does Not Significantly Impact Calculations
+### 3.3. Life Expectancy Does Not Significantly Impact Calculations - done
 
 **Problem:** Changing life expectancy has minimal effect on corpus calculations.
 
