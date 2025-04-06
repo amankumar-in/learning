@@ -110,58 +110,28 @@ function calculateBudgetAllocation(userData) {
   let discretionary;
   let deficit = 0;
 
-  // Calculate retirement savings based on priority
-  if (userData.financialPriority === "future_focused") {
-    // Future-focused: Prioritize retirement savings
-    if (disposableIncome > minimumSavings) {
-      retirementSavings = Math.min(
-        cappedRetirementSavings,
-        Math.max(requiredMonthlySavings, disposableIncome * 0.6)
-      );
-    } else {
-      retirementSavings = minimumSavings;
-    }
-  } else if (userData.financialPriority === "balanced") {
-    // Balanced: Equal importance to present and future
-    if (disposableIncome > minimumSavings) {
-      retirementSavings = Math.min(
-        cappedRetirementSavings,
-        Math.max(requiredMonthlySavings, disposableIncome * 0.4)
-      );
-    } else {
-      retirementSavings = minimumSavings;
-    }
-  } else {
-    // current_focused
-    // Current-focused: Maintain minimum retirement savings
-    retirementSavings = Math.min(
-      cappedRetirementSavings,
-      Math.max(minimumSavings, requiredMonthlySavings * 0.3)
-    );
-  }
+  // Get priority-specific budget adjustments from utility
+  const priorityAdjustments = applyPriorityAdjustments(userData, {
+    disposableIncome: disposableIncome,
+    requiredMonthlySavings: requiredMonthlySavings,
+    minimumSavings: minimumSavings,
+    cappedRetirementSavings: cappedRetirementSavings,
+  });
 
-  // Check if retirement savings exceeds disposable income
+  // Apply adjusted values
+  retirementSavings = priorityAdjustments.retirement_savings;
+
+  // If retirement savings exceeds disposable income
   if (retirementSavings > disposableIncome) {
     deficit = retirementSavings - disposableIncome;
     retirementSavings = disposableIncome;
 
-    // Note: We always calculate short-term savings and discretionary, even with deficit
-    // This addresses the bug in the original implementation
     shortTermSavings = 0;
     discretionary = 0;
   } else {
-    // Calculate remaining funds for discretionary spending
-    const remainingFunds = disposableIncome - retirementSavings;
-
-    // Adjust allocations based on income tier
-    const stSavingsPercent = getShortTermSavingsPercent(
-      userData.incomeTier,
-      userData.financialPriority
-    );
-
-    // Allocate to short-term savings and discretionary based on priority and income tier
-    shortTermSavings = remainingFunds * stSavingsPercent;
-    discretionary = remainingFunds * (1 - stSavingsPercent);
+    // Use adjusted values from priority calculator
+    shortTermSavings = priorityAdjustments.short_term_savings;
+    discretionary = priorityAdjustments.discretionary;
   }
 
   // Step 5: Calculate Category and Subcategory Allocations
@@ -285,7 +255,9 @@ function calculateBudgetAllocation(userData) {
 
     // Deficit if any
     deficit,
-
+    // Priority impacts information
+    priority_impacts: priorityAdjustments.priority_impacts,
+    adjusted_minimum_rate: priorityAdjustments.adjusted_minimum_rate,
     // Category breakdowns
     category_breakdown: {
       housing: housingBreakdown,

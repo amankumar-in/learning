@@ -317,6 +317,153 @@ function updateFamilyComposition() {
   }
 }
 
+// Add to setupEventListeners() function in setup.js
+// After the existing priority options event listener
+
+/**
+ * Updates the priority explanation based on selection and income tier
+ */
+function updatePriorityExplanation(priority) {
+  const explanationPanel = document.getElementById("priority-explanation");
+  if (!explanationPanel) return;
+
+  explanationPanel.classList.remove("hidden");
+
+  // Get user data if available
+  const income =
+    parseFloat(document.getElementById("monthly-income").value) || 50000;
+  const incomeTier = determineIncomeTier(income);
+
+  // Get template
+  const template = PRIORITY_TEMPLATES[priority];
+  if (!template) return;
+
+  // Get income-specific description
+  const tierDesc =
+    template.income_tier_adjustments[incomeTier]?.description ||
+    template.description;
+
+  // Get lifestyle impact
+  let lifestyleImpact = "";
+  if (incomeTier === "VERY_LOW" || incomeTier === "LOW") {
+    lifestyleImpact =
+      template.lifestyle_impact.VERY_LOW || template.lifestyle_impact.LOW;
+  } else if (incomeTier === "LOWER_MIDDLE" || incomeTier === "MIDDLE") {
+    lifestyleImpact = template.lifestyle_impact.MIDDLE;
+  } else {
+    lifestyleImpact = template.lifestyle_impact.HIGH;
+  }
+
+  // Update content
+  document.getElementById("priority-explanation-title").textContent =
+    template.title;
+  document.getElementById("priority-explanation-text").innerHTML = `
+    <p class="mb-2">${tierDesc}</p>
+    <p class="text-sm italic">${lifestyleImpact}</p>
+  `;
+
+  // Update allocation guides
+  if (priority === "future_focused") {
+    document.getElementById("priority-retirement-value").innerHTML =
+      '<span class="text-green-700">↑ Higher Priority</span>';
+    document.getElementById("priority-shortterm-value").innerHTML =
+      '<span class="text-green-700">↑ Higher Priority</span>';
+    document.getElementById("priority-discretionary-value").innerHTML =
+      '<span class="text-red-700">↓ Lower Priority</span>';
+  } else if (priority === "current_focused") {
+    document.getElementById("priority-retirement-value").innerHTML =
+      '<span class="text-red-700">↓ Lower Priority</span>';
+    document.getElementById("priority-shortterm-value").innerHTML =
+      '<span class="text-red-700">↓ Lower Priority</span>';
+    document.getElementById("priority-discretionary-value").innerHTML =
+      '<span class="text-green-700">↑ Higher Priority</span>';
+  } else {
+    document.getElementById("priority-retirement-value").innerHTML =
+      '<span class="text-blue-700">Balanced Approach</span>';
+    document.getElementById("priority-shortterm-value").innerHTML =
+      '<span class="text-blue-700">Balanced Approach</span>';
+    document.getElementById("priority-discretionary-value").innerHTML =
+      '<span class="text-blue-700">Balanced Approach</span>';
+  }
+
+  // Add real-world examples relevant to income level
+  let examplesHTML = '<div class="mt-3 text-xs p-2 bg-gray-100 rounded">';
+
+  if (priority === "future_focused") {
+    if (incomeTier === "VERY_LOW" || incomeTier === "LOW") {
+      examplesHTML +=
+        "Example: You might choose public transportation over ride-sharing or cook at home instead of ordering food, directing the savings to your future.";
+    } else if (incomeTier === "MIDDLE") {
+      examplesHTML +=
+        "Example: You might choose a modest vehicle instead of a luxury model, live in a comfortable but not extravagant home, and invest the difference.";
+    } else {
+      examplesHTML +=
+        "Example: You might delay upgrading to premium luxury items, choose selective high-value experiences over constant indulgence, and maximize tax-advantaged investing.";
+    }
+  } else if (priority === "current_focused") {
+    if (incomeTier === "VERY_LOW" || incomeTier === "LOW") {
+      examplesHTML +=
+        "Example: You might allow for occasional dining out or entertainment while still maintaining minimum saving habits for future stability.";
+    } else if (incomeTier === "MIDDLE") {
+      examplesHTML +=
+        "Example: You might choose a nicer apartment, dine out more frequently, or pursue hobbies that enhance your daily life, while still saving at minimum recommended levels.";
+    } else {
+      examplesHTML +=
+        "Example: You might upgrade your home, car, or lifestyle sooner rather than later, travel more frequently, or pursue premium experiences while maintaining basic wealth building.";
+    }
+  } else {
+    if (incomeTier === "VERY_LOW" || incomeTier === "LOW") {
+      examplesHTML +=
+        "Example: You balance small consistent savings with occasional modest treats, building financial security without feeling completely deprived.";
+    } else if (incomeTier === "MIDDLE") {
+      examplesHTML +=
+        "Example: You save consistently for retirement while enjoying moderate lifestyle pleasures like occasional travel, dining out weekly, and comfortable housing.";
+    } else {
+      examplesHTML +=
+        "Example: You build significant wealth through consistent investing while also enjoying premium experiences, quality products, and lifestyle enhancements that matter to you.";
+    }
+  }
+
+  examplesHTML += "</div>";
+  document.getElementById("priority-explanation-text").innerHTML +=
+    examplesHTML;
+
+  // Add guidance on system constraints
+  if (
+    (priority === "current_focused" &&
+      (incomeTier === "VERY_LOW" || incomeTier === "LOW")) ||
+    (priority === "future_focused" &&
+      (incomeTier === "HIGH" || incomeTier === "ULTRA_HIGH"))
+  ) {
+    let constraintHTML =
+      '<div class="mt-3 text-xs p-2 bg-yellow-50 text-yellow-800 rounded">';
+
+    if (
+      priority === "current_focused" &&
+      (incomeTier === "VERY_LOW" || incomeTier === "LOW")
+    ) {
+      constraintHTML +=
+        "<strong>Note:</strong> At your income level, minimum savings requirements may limit how much you can allocate to discretionary spending, even with this priority selection.";
+    } else if (
+      priority === "future_focused" &&
+      (incomeTier === "HIGH" || incomeTier === "ULTRA_HIGH")
+    ) {
+      constraintHTML +=
+        "<strong>Note:</strong> At your income level, maximum contribution caps may limit how much you can allocate to retirement, even with this priority selection.";
+    }
+
+    constraintHTML += "</div>";
+    document.getElementById("priority-explanation-text").innerHTML +=
+      constraintHTML;
+  }
+}
+
+// Call once on initialization with default value
+const defaultPriority = document.querySelector(
+  'input[name="priority"]:checked'
+).value;
+updatePriorityExplanation(defaultPriority);
+
 // === VALIDATION ===
 
 function validateStep(stepNumber) {

@@ -25,6 +25,9 @@ function updateResultsUI(
   // Update budget tab content
   updateBudgetTab(userData, budgetResults);
 
+  // In the updateResultsUI function, add this after updating the budget tab:
+  addPriorityConsistencyScore(userData, budgetResults);
+
   // Update retirement tab content
   updateRetirementTab(userData, retirementResults);
 
@@ -48,6 +51,191 @@ function updateResultsUI(
   }
 }
 
+/**
+ * Adds priority consistency score to the budget tab
+ * @param {Object} userData - User profile information
+ * @param {Object} budgetResults - Budget allocation results
+ */
+function addPriorityConsistencyScore(userData, budgetResults) {
+  // Create or get container
+  let consistencySection = document.getElementById(
+    "priority-consistency-score"
+  );
+  if (!consistencySection) {
+    consistencySection = document.createElement("div");
+    consistencySection.id = "priority-consistency-score";
+    consistencySection.className = "panel mt-6";
+
+    // Find placement in budget tab
+    const budgetTab = document.getElementById("budget-tab");
+    const guidancePanel = document.getElementById("budget-guidance");
+    if (guidancePanel) {
+      budgetTab.insertBefore(consistencySection, guidancePanel);
+    } else {
+      budgetTab.appendChild(consistencySection);
+    }
+  }
+
+  // Calculate baseline allocations for a balanced approach
+  const balancedRetirement = userData.monthlyIncome * 0.15; // Example baseline
+  const balancedShortTerm = userData.monthlyIncome * 0.1; // Example baseline
+  const balancedDiscretionary = userData.monthlyIncome * 0.15; // Example baseline
+
+  // Calculate actual allocations
+  const actualAllocations = {
+    baseline: {
+      retirement: balancedRetirement,
+      shortterm: balancedShortTerm,
+      discretionary: balancedDiscretionary,
+    },
+    actual: {
+      retirement: budgetResults.retirement_savings,
+      shortterm: budgetResults.short_term_savings,
+      discretionary: budgetResults.discretionary,
+    },
+  };
+
+  // Calculate consistency score
+  const consistency = calculateConsistencyScore(
+    actualAllocations,
+    userData.financialPriority,
+    userData
+  );
+
+  // Check if minimum savings requirements are constraining choices
+  const minSavingsRate = getAdjustedMinimumSavingsRate(userData);
+  const actualSavingsRate =
+    budgetResults.retirement_savings / userData.monthlyIncome;
+  const isConstrained = Math.abs(actualSavingsRate - minSavingsRate) < 0.01;
+
+  // Get constraint explanation
+  const constraintExplanation = getConstraintRecommendation(
+    consistency,
+    userData.financialPriority,
+    userData.incomeTier
+  );
+
+  // Update UI with consistency score
+  consistencySection.innerHTML = `
+    <h3 class="panel-title">Priority Alignment</h3>
+    <div class="bg-gray-50 p-4 rounded-lg">
+      <div class="flex justify-between items-center mb-3">
+        <div>
+          <span class="text-sm text-gray-600">How well your budget aligns with your selected priority:</span>
+          <div class="font-medium">${
+            PRIORITY_TEMPLATES[userData.financialPriority].title
+          }</div>
+        </div>
+        <div class="text-2xl font-bold ${getScoreColorClass(
+          consistency.score
+        )}">
+          ${Math.round(consistency.score)}%
+          ${
+            isConstrained
+              ? `<span class="text-xs font-normal bg-yellow-100 text-yellow-800 px-2 py-1 rounded ml-2">System Constrained</span>`
+              : ""
+          }
+        </div>
+      </div>
+      
+      <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+        <div class="h-2.5 rounded-full ${getScoreColorClass(
+          consistency.score
+        )}" 
+             style="width: ${consistency.score}%"></div>
+      </div>
+      
+      <div class="grid grid-cols-3 gap-3 mb-3">
+        <div class="text-center">
+          <div class="text-sm font-medium">Retirement</div>
+          <div class="text-xs ${getScoreColorClass(
+            consistency.retirement.match
+          )}">
+            ${Math.round(consistency.retirement.match)}% match
+            ${
+              consistency.retirement.constrained
+                ? '<span class="block mt-1 bg-yellow-100 text-yellow-800 rounded-full text-xs px-1">Min Required</span>'
+                : ""
+            }
+          </div>
+        </div>
+        <div class="text-center">
+          <div class="text-sm font-medium">Short-term</div>
+          <div class="text-xs ${getScoreColorClass(
+            consistency.shortterm.match
+          )}">
+            ${Math.round(consistency.shortterm.match)}% match
+          </div>
+        </div>
+        <div class="text-center">
+          <div class="text-sm font-medium">Discretionary</div>
+          <div class="text-xs ${getScoreColorClass(
+            consistency.discretionary.match
+          )}">
+            ${Math.round(consistency.discretionary.match)}% match
+          </div>
+        </div>
+      </div>
+      
+      <div class="text-sm text-gray-600 mb-3">
+        <p>${getConsistencyMessage(
+          consistency.score,
+          userData.financialPriority
+        )}</p>
+      </div>
+      
+      <div class="text-xs p-2 rounded ${
+        isConstrained
+          ? "bg-yellow-50 border border-yellow-200"
+          : "bg-blue-50 border border-blue-200"
+      }">
+        <p class="font-medium">${
+          isConstrained ? "System Constraint Note:" : "Budget Note:"
+        }</p>
+        <p>${constraintExplanation}</p>
+      </div>
+    </div>
+  `;
+}
+
+// Helper for score colors - enhanced with more granular ratings
+function getScoreColorClass(score) {
+  if (score >= 85) return "text-green-600 bg-green-500";
+  if (score >= 70) return "text-green-600 bg-green-400";
+  if (score >= 55) return "text-yellow-600 bg-yellow-500";
+  if (score >= 40) return "text-yellow-600 bg-yellow-400";
+  return "text-red-600 bg-red-500";
+}
+
+// Enhanced helper for consistency message with more human guidance
+function getConsistencyMessage(score, priority) {
+  if (score >= 85) {
+    return `Your budget strongly reflects your ${priority.replace(
+      "_",
+      "-"
+    )} priority. Your allocations closely match our recommendations for this approach.`;
+  } else if (score >= 70) {
+    return `Your budget generally aligns with your ${priority.replace(
+      "_",
+      "-"
+    )} priority. A few minor adjustments would bring it into even better alignment.`;
+  } else if (score >= 55) {
+    return `Your budget somewhat aligns with your ${priority.replace(
+      "_",
+      "-"
+    )} priority, but there's room for improvement to better reflect your stated preferences.`;
+  } else if (score >= 40) {
+    return `Your budget is only partially aligned with your ${priority.replace(
+      "_",
+      "-"
+    )} priority. Consider the suggested adjustments to better match your stated preferences.`;
+  } else {
+    return `Your current allocations don't clearly reflect your stated ${priority.replace(
+      "_",
+      "-"
+    )} priority. This may be due to system constraints or could be improved with budget adjustments.`;
+  }
+}
 /**
  * Calculates the future value of a monthly savings amount
  *
