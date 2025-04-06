@@ -44,6 +44,10 @@ function updateResultsUI(
   if (budgetResults.deficit > 0) {
     showDeficitWarning(budgetResults.deficit, userData.monthlyIncome);
   }
+  // Show survival mode guidance if applicable
+  if (budgetResults.survival_mode) {
+    showSurvivalModeGuidance(budgetResults, userData);
+  }
 
   // Initialize and update tradeoff visualizer
   if (typeof addTradeoffVisualizer === "function") {
@@ -594,6 +598,100 @@ function showDeficitWarning(deficit, monthlyIncome) {
     warning,
     dashboardSummary.nextSibling
   );
+}
+
+/**
+ * Shows survival mode guidance for users with severe income constraints
+ * @param {Object} budgetResults Budget allocation results
+ * @param {Object} userData User profile information
+ */
+function showSurvivalModeGuidance(budgetResults, userData) {
+  // Create guidance element with compassionate, practical advice
+  const guidance = document.createElement("div");
+  guidance.className =
+    "bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6";
+
+  let guidanceContent = `
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <div class="ml-3">
+        <p class="text-sm font-bold mb-2">
+          Your current income of ${formatCurrency(
+            userData.monthlyIncome
+          )} is insufficient to cover basic necessities 
+          (calculated at ${formatCurrency(budgetResults.original_essentials)}).
+        </p>
+        <p class="text-sm mb-3">
+          We've created a prioritized survival budget focusing on the most essential needs, 
+          but additional support resources will likely be necessary.
+        </p>
+  `;
+
+  if (budgetResults.guidance_notes && budgetResults.guidance_notes.length > 0) {
+    guidanceContent +=
+      '<p class="text-sm font-medium mb-1">Recommended actions:</p><ul class="list-disc pl-5 text-sm">';
+    budgetResults.guidance_notes.forEach((note) => {
+      guidanceContent += `<li>${note}</li>`;
+    });
+    guidanceContent += "</ul>";
+  }
+
+  // Add location-specific guidance
+  const locationSpecificGuidance = getLocationSpecificResources(
+    userData.location,
+    userData.locationTier
+  );
+  if (locationSpecificGuidance) {
+    guidanceContent += `
+      <p class="text-sm font-medium mt-2 mb-1">Available support resources:</p>
+      <ul class="list-disc pl-5 text-sm">
+        ${locationSpecificGuidance}
+      </ul>
+    `;
+  }
+
+  guidanceContent += `
+        <p class="text-sm mt-3">
+          <strong>Income improvement is critical.</strong> Focus on increasing earnings 
+          through additional work, skills development, or government assistance programs.
+        </p>
+      </div>
+    </div>
+  `;
+
+  guidance.innerHTML = guidanceContent;
+
+  // Insert at top of dashboard
+  const dashboardSummary = document.querySelector(".dashboard-summary");
+  dashboardSummary.parentNode.insertBefore(guidance, dashboardSummary);
+}
+
+/**
+ * Get location-specific resources based on user's location
+ * @param {string} location User's location
+ * @param {string} locationTier Location tier
+ * @returns {string} HTML with location-specific resource information
+ */
+function getLocationSpecificResources(location, locationTier) {
+  // Base resources common across India
+  let resources = `<li>Contact local Panchayat/Municipal office for available assistance programs</li>
+                   <li>Visit nearby Public Distribution System (PDS) shop for subsidized essentials</li>`;
+
+  // Add location-specific resources
+  if (location === "delhi" || locationTier === "METRO") {
+    resources += `<li>Delhi Shelter Board helpline: 011-2334-5754</li>
+                 <li>Free medical at Mohalla clinics</li>`;
+  } else if (location === "mumbai" || location === "pune") {
+    resources += `<li>BMC helpline for assistance: 1916</li>`;
+  }
+
+  // Add more location-specific resources as needed
+
+  return resources;
 }
 
 // === BUDGET TAB UI UPDATES ===

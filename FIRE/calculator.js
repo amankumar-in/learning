@@ -31,7 +31,7 @@ function calculateBudgetAllocation(userData) {
 
   // Education depends on number of children
   const childrenCount = getChildrenCount(userData.familyComposition);
-  const education =
+  let education =
     BASE_ESSENTIAL_EXPENSES.EDUCATION_PER_CHILD *
     childrenCount *
     locationMultiplier;
@@ -61,6 +61,174 @@ function calculateBudgetAllocation(userData) {
     personal +
     household;
 
+  // Initialize guidance notes array
+  let guidanceNotes = [];
+  // Step 2.5: Reconcile calculated essentials with user's reported expenses
+  let adjustedTotalEssentials = totalEssentials;
+
+  if (userData.monthlyExpenses > 0) {
+    // Get user's input expenses
+    const userExpenses = userData.monthlyExpenses;
+
+    // Estimate what portion of user expenses are likely essentials based on income tier
+    let essentialRatio;
+    if (userData.incomeTier === "VERY_LOW" || userData.incomeTier === "LOW") {
+      essentialRatio = 0.85; // 85% of expenses are essential at lower incomes
+    } else if (
+      userData.incomeTier === "LOWER_MIDDLE" ||
+      userData.incomeTier === "MIDDLE"
+    ) {
+      essentialRatio = 0.75; // 75% at middle incomes
+    } else {
+      essentialRatio = 0.65; // 65% at higher incomes
+    }
+
+    // Estimate user's essential expenses
+    const estimatedUserEssentials = Math.min(
+      userExpenses * essentialRatio,
+      userExpenses
+    );
+
+    // Compare with system-calculated essentials
+    if (
+      totalEssentials > userData.monthlyIncome &&
+      estimatedUserEssentials < totalEssentials
+    ) {
+      // User's estimated essentials are lower and within income - use their implied number
+      const scalingFactor = estimatedUserEssentials / totalEssentials;
+
+      // Create copies of the variables instead of modifying them directly
+      housing = housing * scalingFactor;
+      food = food * scalingFactor;
+      utilities = utilities * scalingFactor;
+      transport = transport * scalingFactor;
+      healthcare = healthcare * scalingFactor;
+      education = education * scalingFactor;
+      personal = personal * scalingFactor;
+      household = household * scalingFactor;
+
+      // Recalculate total essentials
+      adjustedTotalEssentials =
+        housing +
+        food +
+        utilities +
+        transport +
+        healthcare +
+        education +
+        personal +
+        household;
+
+      // Add guidance note about the adjustment
+      guidanceNotes.push(
+        "We've adjusted essential expenses to align with your reported monthly spending"
+      );
+    }
+  }
+
+  // Check if income is insufficient for basic essentials
+  const incomeDeficit = adjustedTotalEssentials - userData.monthlyIncome;
+  let scaledHousing = housing;
+  let scaledFood = food;
+  let scaledUtilities = utilities;
+  let scaledTransport = transport;
+  let scaledHealthcare = healthcare;
+  let scaledEducation = education;
+  let scaledPersonal = personal;
+  let scaledHousehold = household;
+  let scaledTotalEssentials = adjustedTotalEssentials;
+  let survivalMode = false;
+
+  if (incomeDeficit > 0) {
+    // Set survival mode flag if essentials still exceed income after user reconciliation
+    survivalMode = true;
+
+    // Establish minimum survival thresholds based on location tier
+    const locationFactor = LOCATION_MULTIPLIERS[userData.locationTier];
+    const minFoodPerPerson = 2000 * locationFactor; // Minimum food budget per person
+    const minFoodTotal = minFoodPerPerson * userData.familySize;
+
+    // Prioritize critical categories for survival
+    // 1. Food - ensure minimum nutrition
+    scaledFood = Math.max(minFoodTotal, food * 0.8);
+
+    // 2. Housing - ensure basic shelter (but may need support systems)
+    const minHousingPerPerson = 1500 * locationFactor;
+    const minHousingTotal = minHousingPerPerson * userData.familySize;
+    scaledHousing = Math.max(minHousingTotal, housing * 0.7);
+
+    // 3. Healthcare - maintain minimum health needs
+    const minHealthcare = 1000 * locationFactor * userData.familySize;
+    scaledHealthcare = Math.max(minHealthcare, healthcare * 0.9);
+
+    // Reduce other categories more aggressively
+    // Scale utilities, transport, education, personal, household down more dramatically
+    const remainingIncome =
+      userData.monthlyIncome - (scaledFood + scaledHousing + scaledHealthcare);
+
+    if (remainingIncome > 0) {
+      // Distribute remaining income proportionally to other categories
+      const otherCategoriesTotal =
+        utilities + transport + education + personal + household;
+      const remainingFactor = Math.min(
+        1,
+        remainingIncome / otherCategoriesTotal
+      );
+
+      scaledUtilities = utilities * remainingFactor;
+      scaledTransport = transport * remainingFactor;
+      scaledEducation = education * remainingFactor;
+      scaledPersonal = personal * remainingFactor;
+      scaledHousehold = household * remainingFactor;
+    } else {
+      // Extreme case - not enough for food, housing, and healthcare
+      // Further reduce these categories while adding guidance notes
+      const availableIncome = userData.monthlyIncome;
+      const essentialTotal = scaledFood + scaledHousing + scaledHealthcare;
+      const severeScalingFactor = availableIncome / essentialTotal;
+
+      scaledFood = scaledFood * severeScalingFactor;
+      scaledHousing = scaledHousing * severeScalingFactor;
+      scaledHealthcare = scaledHealthcare * severeScalingFactor;
+
+      scaledUtilities = 0;
+      scaledTransport = 0;
+      scaledEducation = 0;
+      scaledPersonal = 0;
+      scaledHousehold = 0;
+
+      guidanceNotes.push("External support needed for basic survival");
+      guidanceNotes.push("Explore government assistance programs");
+      guidanceNotes.push("Consider community support resources");
+      guidanceNotes.push("Income increase critically needed");
+    }
+
+    // Recalculate total essentials
+    scaledTotalEssentials =
+      scaledHousing +
+      scaledFood +
+      scaledUtilities +
+      scaledTransport +
+      scaledHealthcare +
+      scaledEducation +
+      scaledPersonal +
+      scaledHousehold;
+
+    // Add guidance notes based on specific situations
+    if (scaledHousing < housing * 0.7) {
+      guidanceNotes.push(
+        "Housing assistance or shared accommodation strongly recommended"
+      );
+    }
+
+    if (scaledFood < minFoodTotal) {
+      guidanceNotes.push("Food security resources and food banks recommended");
+    }
+
+    if (scaledHealthcare < healthcare * 0.9) {
+      guidanceNotes.push("Seek free/subsidized healthcare services");
+    }
+  }
+
   // Step 3: Calculate Appropriate Savings Rate
   // Get minimum savings rate based on income tier
   const minSavingsRate = MINIMUM_SAVINGS_RATES[userData.incomeTier];
@@ -82,7 +250,7 @@ function calculateBudgetAllocation(userData) {
   // Calculate required monthly savings for retirement
   const retirementCorpusResult = calculateRetirementCorpusQuick(
     userData,
-    totalEssentials
+    adjustedTotalEssentials
   );
   const requiredMonthlySavings = retirementCorpusResult.requiredMonthlySavings;
   const requiredSavingsRate = requiredMonthlySavings / userData.monthlyIncome;
@@ -99,8 +267,7 @@ function calculateBudgetAllocation(userData) {
   const cappedRetirementSavings = userData.monthlyIncome * actualSavingsRate;
 
   // Step 4: Calculate disposable income after essentials
-  const disposableIncome = userData.monthlyIncome - totalEssentials;
-
+  const disposableIncome = userData.monthlyIncome - adjustedTotalEssentials;
   // Calculate minimum savings amount
   const minimumSavings = userData.monthlyIncome * minSavingsRate;
 
@@ -286,6 +453,11 @@ function calculateBudgetAllocation(userData) {
     // User's income tier for reference
     income_tier: userData.incomeTier,
     income_tier_display: getIncomeTierDisplay(userData.incomeTier),
+
+    // Add at the end of the budget object
+    survival_mode: survivalMode,
+    guidance_notes: guidanceNotes,
+    original_essentials: totalEssentials,
   };
 
   return budget;

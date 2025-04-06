@@ -68,41 +68,22 @@ function calculateAdjustedRetirement(
   // Get adjusted minimum savings with priority adjustment
   const adjustedMinimum = getAdjustedMinimumRate(userData);
 
-  // Apply priority-specific calculation
-  if (userData.financialPriority === "future_focused") {
-    // Future-focused: Higher retirement allocation
-    if (disposableIncome > adjustedMinimum) {
-      return Math.min(
-        cappedRetirementSavings,
-        Math.max(
-          adjustedMinimum,
-          Math.max(requiredMonthlySavings, disposableIncome * 0.7)
-        )
-      );
-    } else {
-      return adjustedMinimum;
-    }
-  } else if (userData.financialPriority === "balanced") {
-    // Balanced: Standard retirement allocation
-    if (disposableIncome > adjustedMinimum) {
-      return Math.min(
-        cappedRetirementSavings,
-        Math.max(
-          adjustedMinimum,
-          Math.max(requiredMonthlySavings, disposableIncome * 0.4)
-        )
-      );
-    } else {
-      return adjustedMinimum;
-    }
-  } else {
-    // Current-focused: Lower retirement allocation
-    // The multiplier is applied to the required amount, not the disposable income
-    return Math.min(
-      cappedRetirementSavings,
-      Math.max(adjustedMinimum, requiredMonthlySavings * 0.2)
-    );
-  }
+  // Use the same multiplier from PRIORITY_TEMPLATES that consistency scoring uses
+  const priorityMultiplier = tierAdjustments.retirement_multiplier;
+
+  // Calculate target retirement allocation using consistent formula
+  const targetRetirementAllocation = Math.min(
+    cappedRetirementSavings,
+    Math.max(
+      adjustedMinimum,
+      Math.max(
+        requiredMonthlySavings,
+        disposableIncome * priorityMultiplier * 0.4 // Scale factor to align with previous behavior
+      )
+    )
+  );
+
+  return targetRetirementAllocation;
 }
 
 /**
