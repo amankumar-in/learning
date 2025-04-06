@@ -41,6 +41,31 @@ function updateResultsUI(
   if (budgetResults.deficit > 0) {
     showDeficitWarning(budgetResults.deficit, userData.monthlyIncome);
   }
+
+  // Initialize and update tradeoff visualizer
+  if (typeof addTradeoffVisualizer === "function") {
+    addTradeoffVisualizer();
+  }
+}
+
+/**
+ * Calculates the future value of a monthly savings amount
+ *
+ * @param {number} monthlySavings Monthly savings amount
+ * @param {number} annualRate Annual interest rate as decimal (e.g., 0.08 for 8%)
+ * @param {number} years Number of years
+ * @returns {number} Future value
+ */
+function calculateFutureSavedAmount(monthlySavings, annualRate, years) {
+  const monthlyRate = annualRate / 12;
+  const months = years * 12;
+
+  // Formula for future value of recurring deposits
+  return (
+    monthlySavings *
+    ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) *
+    (1 + monthlyRate)
+  );
 }
 
 /**
@@ -63,7 +88,7 @@ function updateSummaryMetrics(userData, budgetResults, retirementResults) {
   );
   if (budgetLabel) budgetLabel.textContent = "Monthly Income";
 
-  // Update retirement corpus with BOTH target and projected values
+  // Update retirement corpus value
   document.getElementById("retirement-corpus-value").innerHTML = `
     <div>${formatCurrency(retirementResults.total_corpus_required)}</div>
     <div class="text-sm font-normal ${
@@ -82,32 +107,59 @@ function updateSummaryMetrics(userData, budgetResults, retirementResults) {
     </div>
   `;
 
-  // Update monthly savings card with clearer language
+  // Update retirement age display
+  document.getElementById("retirement-age-display").textContent =
+    userData.retirementAge;
+
+  // Update monthly savings card with clearer information
   document.getElementById("monthly-savings-value").innerHTML = `
     <div>${formatCurrency(retirementResults.recommended_monthly_savings)}</div>
-    <div class="text-xs ${
-      retirementResults.required_monthly_savings >
-      retirementResults.recommended_monthly_savings
-        ? "text-yellow-600"
-        : ""
-    }">
-      Ideal: ${formatCurrency(retirementResults.required_monthly_savings)}
-    </div>
   `;
 
-  // Update percentage explanation
+  // Update savings percentage explanation
+  const savingsPercent = (
+    (retirementResults.recommended_monthly_savings / userData.monthlyIncome) *
+    100
+  ).toFixed(1);
+
   document.getElementById("savings-percent").innerHTML = `
-    <div>${(
-      (retirementResults.recommended_monthly_savings / userData.monthlyIncome) *
-      100
-    ).toFixed(1)}% of income</div>
-    <div class="text-xs">
-      Ideal: ${(
-        (retirementResults.required_monthly_savings / userData.monthlyIncome) *
-        100
-      ).toFixed(1)}%
-    </div>
+    <div>${savingsPercent}% of income</div>
   `;
+
+  // Add special indicator for shortfall or surplus
+  if (
+    retirementResults.required_monthly_savings >
+    retirementResults.recommended_monthly_savings
+  ) {
+    // There's a shortfall
+    const shortfall =
+      retirementResults.required_monthly_savings -
+      retirementResults.recommended_monthly_savings;
+    const shortfallPercent = (
+      (shortfall / userData.monthlyIncome) *
+      100
+    ).toFixed(1);
+
+    document.getElementById("savings-percent").innerHTML += `
+      <div class="text-xs text-yellow-600">
+        Need additional ${shortfallPercent}% for full retirement goal
+      </div>
+    `;
+  } else if (
+    retirementResults.required_monthly_savings <
+    retirementResults.recommended_monthly_savings
+  ) {
+    // There's extra capacity
+    document.getElementById("savings-percent").innerHTML += `
+      <div class="text-xs text-green-600">
+        Mathematically required: ${(
+          (retirementResults.required_monthly_savings /
+            userData.monthlyIncome) *
+          100
+        ).toFixed(1)}%
+      </div>
+    `;
+  }
 }
 
 /**
@@ -336,12 +388,8 @@ function showDeficitWarning(deficit, monthlyIncome) {
       </div>
       <div class="ml-3">
         <p class="text-sm">
-          <strong>Affordability Alert:</strong> Your ideal retirement savings rate of 
-          ${(
-            ((deficit + budgetResults.retirement_savings) / monthlyIncome) *
-            100
-          ).toFixed(1)}% 
-          exceeds your available income after essential expenses. We've adjusted your retirement 
+          <strong>Affordability Alert:</strong> Your ideal retirement savings rate exceeds 
+          your available income after essential expenses. We've adjusted your retirement 
           savings to a more realistic amount based on your current income.
         </p>
         <p class="text-sm mt-2">
@@ -380,6 +428,147 @@ function updateBudgetTab(userData, budgetResults) {
 
   // Add budget summary/guidance based on income tier
   addBudgetGuidance(userData.incomeTier, budgetResults);
+
+  // Create short-term savings explanation panel
+  addShortTermSavingsExplanation(userData, budgetResults);
+}
+
+/**
+ * Adds an explanation panel for short-term savings
+ *
+ * @param {Object} userData User profile information
+ * @param {Object} budgetResults Budget allocation results
+ */
+function addShortTermSavingsExplanation(userData, budgetResults) {
+  // Only add explanation if short-term savings exist
+  if (
+    !budgetResults.short_term_savings ||
+    budgetResults.short_term_savings <= 0
+  )
+    return;
+
+  // Calculate the percentage of income
+  const shortTermSavingsPercent = (
+    (budgetResults.short_term_savings / userData.monthlyIncome) *
+    100
+  ).toFixed(1);
+
+  // Create panel if it doesn't exist
+  let explanationPanel = document.getElementById(
+    "short-term-savings-explanation"
+  );
+  if (!explanationPanel) {
+    explanationPanel = document.createElement("div");
+    explanationPanel.id = "short-term-savings-explanation";
+    explanationPanel.className = "panel mt-6";
+
+    // Find the budget tab and append
+    const budgetTab = document.getElementById("budget-tab");
+    budgetTab.appendChild(explanationPanel);
+  }
+
+  // Create recommended breakdown based on user's income tier and life stage
+  const emergencyMonths =
+    userData.incomeTier === "HIGH" || userData.incomeTier === "ULTRA_HIGH"
+      ? 6
+      : 4;
+  const monthlyExpenses =
+    userData.monthlyExpenses > 0
+      ? userData.monthlyExpenses
+      : budgetResults.total_essentials;
+  const recommendedEmergencyFund = monthlyExpenses * emergencyMonths;
+
+  // Calculate emergency fund contribution (50% of short-term savings until funded)
+  const emergencyFundContribution = Math.min(
+    budgetResults.short_term_savings * 0.5,
+    recommendedEmergencyFund / 24
+  ); // Fund within 2 years
+
+  // Calculate other allocations
+  const majorExpensesAllocation = budgetResults.short_term_savings * 0.3;
+  const lifeGoalsAllocation = budgetResults.short_term_savings * 0.2;
+
+  // Build the panel HTML
+  explanationPanel.innerHTML = `
+  <h3 class="panel-title">Understanding Your Short-Term Savings</h3>
+  
+  <div class="bg-blue-50 p-4 rounded-lg mb-4">
+    <p class="mb-3">Your budget allocates <strong>${formatCurrency(
+      budgetResults.short_term_savings
+    )}</strong> 
+      (${shortTermSavingsPercent}% of income) to short-term savings each month. These savings are separate from 
+      your retirement funds and serve different purposes.</p>
+      
+    <h4 class="font-medium mb-2">What Are Short-Term Savings For?</h4>
+    <ul class="list-disc pl-5 mb-4 space-y-1">
+      <li><strong>Emergency Fund:</strong> For unexpected expenses like medical emergencies or sudden income loss</li>
+      <li><strong>Major Planned Expenses:</strong> For infrequent large costs like home repairs, vehicle purchases</li>
+      <li><strong>Life Goals:</strong> For medium-term objectives like education, vacations, or special events</li>
+      <li><strong>Opportunity Fund:</strong> For unexpected investment or business opportunities</li>
+    </ul>
+  </div>
+  
+  <h4 class="font-medium mb-3">Recommended Monthly Allocation</h4>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    <div class="bg-white p-3 rounded-lg border border-gray-200">
+      <div class="flex justify-between mb-1">
+        <div class="text-sm text-indigo-700 font-medium">Emergency Fund</div>
+        <div class="text-sm font-medium">50%</div>
+      </div>
+      <div class="font-bold mb-1">${formatCurrency(
+        emergencyFundContribution
+      )}/month</div>
+      <div class="text-xs text-gray-600 mb-2">Goal: ${formatCurrency(
+        recommendedEmergencyFund
+      )} (${emergencyMonths} months expenses)</div>
+      <div class="h-2 w-full bg-gray-200 rounded">
+        <div class="bg-indigo-600 h-2 rounded" style="width: 50%"></div>
+      </div>
+      <div class="mt-1 text-xs text-gray-500">Allocation: 50% of short-term savings</div>
+    </div>
+    
+    <div class="bg-white p-3 rounded-lg border border-gray-200">
+      <div class="flex justify-between mb-1">
+        <div class="text-sm text-green-700 font-medium">Major Planned Expenses</div>
+        <div class="text-sm font-medium">30%</div>
+      </div>
+      <div class="font-bold mb-1">${formatCurrency(
+        majorExpensesAllocation
+      )}/month</div>
+      <div class="text-xs text-gray-600 mb-2">For vehicle, home repairs, electronics</div>
+      <div class="h-2 w-full bg-gray-200 rounded">
+        <div class="bg-green-600 h-2 rounded" style="width: 30%"></div>
+      </div>
+      <div class="mt-1 text-xs text-gray-500">Allocation: 30% of short-term savings</div>
+    </div>
+    
+    <div class="bg-white p-3 rounded-lg border border-gray-200">
+  <div class="flex justify-between mb-1">
+    <div class="text-sm font-medium" style="color: #f59e0b;">Life Goals</div>
+    <div class="text-sm font-medium">20%</div>
+  </div>
+  <div class="font-bold mb-1">${formatCurrency(lifeGoalsAllocation)}/month</div>
+  <div class="text-xs text-gray-600 mb-2">For education, travel, special events</div>
+  
+  <!-- Completely simplified progress bar with inline styles -->
+  <div style="width: 100%; height: 8px; background-color: #e5e7eb; border-radius: 4px; position: relative;">
+    <div style="position: absolute; top: 0; left: 0; width: 20%; height: 8px; background-color: #f59e0b; border-radius: 4px;"></div>
+  </div>
+  
+  <div class="mt-1 text-xs text-gray-500">Allocation: 20% of short-term savings</div>
+</div>
+  </div>
+  
+  <div class="text-sm bg-gray-50 p-3 rounded-lg">
+    <p class="font-medium mb-1">Pro Tips for Short-Term Savings:</p>
+    <ul class="list-disc pl-5 space-y-1">
+      <li>Keep your emergency fund in a separate high-yield savings account for easy access</li>
+      <li>For planned expenses 1-3 years away, consider short-term fixed deposits or liquid debt funds</li>
+      <li>Create separate sub-accounts for different goals to avoid dipping into your emergency fund</li>
+      <li>Review and adjust your short-term savings allocations every 6 months</li>
+    </ul>
+  </div>
+`;
 }
 
 /**
@@ -483,18 +672,39 @@ function addBudgetGuidance(incomeTier, budgetResults) {
     <p class="mb-4">${description}</p>
     
     <div class="mb-4">
-      <div class="flex justify-between mb-1">
-        <span class="text-sm font-medium">Budget Allocation</span>
-      </div>
-      <div class="w-full bg-gray-200 rounded-full h-2.5">
-        <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${essentialPercent}%"></div>
-      </div>
-      <div class="flex justify-between text-sm mt-1">
-        <span>${essentialPercent}% Essentials</span>
-        <span>${savingsPercent}% Savings</span>
-        <span>${discretionaryPercent}% Discretionary</span>
-      </div>
+  <div class="flex justify-between mb-1">
+    <span class="text-sm font-medium">Budget Allocation</span>
+  </div>
+  
+  <!-- Stacked progress bar with inline styles for reliability -->
+  <div style="width: 100%; height: 10px; background-color: #f3f4f6; border-radius: 9999px; position: relative; overflow: hidden;">
+    <!-- Essentials segment -->
+    <div style="position: absolute; top: 0; left: 0; height: 10px; background-color: #3b82f6; width: ${essentialPercent}%;"></div>
+    
+    <!-- Savings segment -->
+    <div style="position: absolute; top: 0; left: ${essentialPercent}%; height: 10px; background-color: #10b981; width: ${savingsPercent}%;"></div>
+    
+    <!-- Discretionary segment -->
+    <div style="position: absolute; top: 0; left: ${
+      Number(essentialPercent) + Number(savingsPercent)
+    }%; height: 10px; background-color: #f59e0b; width: ${discretionaryPercent}%;"></div>
+  </div>
+  
+  <div class="flex justify-between text-sm mt-2">
+    <div>
+      <span class="inline-block w-3 h-3 bg-blue-500 rounded-full mr-1"></span>
+      <span>${essentialPercent}% Essentials</span>
     </div>
+    <div>
+      <span class="inline-block w-3 h-3 bg-green-500 rounded-full mr-1"></span>
+      <span>${savingsPercent}% Savings</span>
+    </div>
+    <div>
+      <span class="inline-block w-3 h-3 bg-amber-500 rounded-full mr-1"></span>
+      <span>${discretionaryPercent}% Discretionary</span>
+    </div>
+  </div>
+</div>
     
     <h4 class="font-medium mb-2">Budget Tips:</h4>
     <ul class="list-disc pl-5 space-y-1">
@@ -529,18 +739,47 @@ function updateBudgetBreakdownTable(userData, budgetResults) {
   };
 
   // Add rows for each category
+  let totalShown = 0;
+
   for (const [category, displayName] of Object.entries(categoryDisplayNames)) {
     if (budgetResults[category] !== undefined && budgetResults[category] > 0) {
       const amount = budgetResults[category];
       const percentage = ((amount / userData.monthlyIncome) * 100).toFixed(1);
 
+      // For retirement savings, add special indicator when it differs from ideal
+      let specialClass = "";
+      let infoSpan = "";
+
+      if (
+        category === "retirement_savings" &&
+        window.calculationResults &&
+        window.calculationResults.retirementResults
+      ) {
+        const requiredAmount =
+          window.calculationResults.retirementResults.required_monthly_savings;
+
+        if (amount < requiredAmount) {
+          // Below ideal
+          specialClass = "text-yellow-600";
+          infoSpan = `<span class="text-xs text-yellow-600"> (${(
+            (amount / requiredAmount) *
+            100
+          ).toFixed(0)}% of ideal)</span>`;
+        } else if (amount > requiredAmount) {
+          // Above ideal (savings surplus)
+          specialClass = "text-green-600";
+          infoSpan = `<span class="text-xs text-green-600"> (Exceeds ideal)</span>`;
+        }
+      }
+
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${displayName}</td>
-        <td class="text-right">${formatCurrency(amount)}</td>
-        <td class="text-right">${percentage}%</td>
+        <td>${displayName}${infoSpan}</td>
+        <td class="text-right ${specialClass}">${formatCurrency(amount)}</td>
+        <td class="text-right ${specialClass}">${percentage}%</td>
       `;
       table.appendChild(row);
+      totalShown += amount;
     }
   }
 
@@ -549,8 +788,11 @@ function updateBudgetBreakdownTable(userData, budgetResults) {
   totalRow.classList.add("font-bold", "border-t-2", "border-gray-300");
   totalRow.innerHTML = `
     <td>Total</td>
-    <td class="text-right">${formatCurrency(budgetResults.total_budget)}</td>
-    <td class="text-right">100%</td>
+    <td class="text-right">${formatCurrency(totalShown)}</td>
+    <td class="text-right">${(
+      (totalShown / userData.monthlyIncome) *
+      100
+    ).toFixed(1)}%</td>
   `;
   table.appendChild(totalRow);
 }
@@ -626,6 +868,11 @@ function updateSubcategoryBreakdownTable(budgetResults) {
     repairs: "Repairs",
     supplies: "Household Supplies",
 
+    // Short-term savings subcategories
+    emergency_fund: "Emergency Fund",
+    major_expenses: "Major Planned Expenses",
+    life_goals: "Life Goals & Opportunities",
+
     // Discretionary
     entertainment: "Entertainment",
     shopping: "Shopping",
@@ -691,24 +938,50 @@ function createBudgetChart(budgetResults) {
   const data = [];
   const labels = [];
   const backgroundColors = [
-    "#4F46E5", // Indigo
-    "#10B981", // Emerald
-    "#F59E0B", // Amber
-    "#EF4444", // Red
-    "#8B5CF6", // Purple
-    "#EC4899", // Pink
-    "#06B6D4", // Cyan
-    "#84CC16", // Lime
-    "#3B82F6", // Blue
-    "#6366F1", // Indigo
-    "#F97316", // Orange
+    "#4F46E5", // Indigo - Essentials
+    "#10B981", // Emerald - Essentials
+    "#F59E0B", // Amber - Essentials
+    "#EF4444", // Red - Essentials
+    "#8B5CF6", // Purple - Essentials
+    "#EC4899", // Pink - Essentials
+    "#06B6D4", // Cyan - Essentials
+    "#84CC16", // Lime - Essentials
+    "#3B82F6", // Blue - Retirement (highlighted)
+    "#6366F1", // Indigo - Short-term
+    "#F97316", // Orange - Discretionary
   ];
 
   let i = 0;
   for (const [category, label] of Object.entries(categories)) {
     if (budgetResults[category] !== undefined && budgetResults[category] > 0) {
       data.push(budgetResults[category]);
-      labels.push(label);
+
+      // Add special indicator for retirement when it differs from ideal
+      if (
+        category === "retirement_savings" &&
+        window.calculationResults &&
+        window.calculationResults.retirementResults
+      ) {
+        const requiredAmount =
+          window.calculationResults.retirementResults.required_monthly_savings;
+        const currentAmount = budgetResults[category];
+
+        if (currentAmount < requiredAmount) {
+          // Below ideal
+          labels.push(
+            `${label} (${((currentAmount / requiredAmount) * 100).toFixed(
+              0
+            )}% of ideal)`
+          );
+        } else if (currentAmount > requiredAmount) {
+          // Above ideal
+          labels.push(`${label} (Exceeds ideal)`);
+        } else {
+          labels.push(label);
+        }
+      } else {
+        labels.push(label);
+      }
       i++;
     }
   }
@@ -785,9 +1058,285 @@ function updateRetirementTab(userData, retirementResults) {
   // Add retirement income breakdown
   updateRetirementIncomeBreakdown(retirementResults);
 
+  // Add visual retirement comparison
+  addRetirementComparisonVisual(userData, retirementResults);
+
+  // NEW: Add scenario explorer
+  addRetirementScenarioExplorer(
+    userData,
+    retirementResults,
+    window.calculationResults.budgetResults
+  );
+
   // Add retirement readiness metrics
   updateRetirementReadiness(retirementResults);
   addRetirementExplanationSection();
+
+  // Add guidance panel
+  addRetirementGuidancePanel(userData, retirementResults);
+}
+
+/**
+ * Adds an interactive scenario exploration panel to the retirement tab
+ *
+ * @param {Object} userData User profile information
+ * @param {Object} retirementResults Retirement planning results
+ * @param {Object} budgetResults Budget allocation results
+ */
+function addRetirementScenarioExplorer(
+  userData,
+  retirementResults,
+  budgetResults
+) {
+  // Only add if there's a retirement shortfall
+  const hasShortfall =
+    retirementResults.required_monthly_savings >
+    retirementResults.recommended_monthly_savings;
+  if (!hasShortfall && retirementResults.recommended_monthly_savings === 0)
+    return;
+
+  // Create panel if it doesn't exist
+  let scenarioPanel = document.getElementById("retirement-scenario-explorer");
+  if (!scenarioPanel) {
+    scenarioPanel = document.createElement("div");
+    scenarioPanel.id = "retirement-scenario-explorer";
+    scenarioPanel.className = "panel mt-6";
+
+    // Find the retirement tab and append
+    const retirementTab = document.getElementById("retirement-tab");
+    retirementTab.appendChild(scenarioPanel);
+  }
+
+  // Calculate key values
+  const shortfall = Math.max(
+    0,
+    retirementResults.required_monthly_savings -
+      retirementResults.recommended_monthly_savings
+  );
+  const currentRetirementSavings =
+    retirementResults.recommended_monthly_savings;
+  const currentDiscretionary = budgetResults.discretionary;
+  const retirementPercentage = (
+    (currentRetirementSavings / retirementResults.required_monthly_savings) *
+    100
+  ).toFixed(0);
+
+  // Calculate the minimum discretionary reduction needed to fully fund retirement
+  const minReductionNeeded = Math.min(shortfall, currentDiscretionary);
+  const minReductionPercent = (
+    (minReductionNeeded / currentDiscretionary) *
+    100
+  ).toFixed(0);
+
+  // Calculate future impact
+  const yearsToRetirement = userData.retirementAge - userData.age;
+  const monthlyShortfall =
+    retirementResults.required_monthly_savings -
+    retirementResults.recommended_monthly_savings;
+  const annualShortfall = monthlyShortfall * 12;
+
+  // Calculate corpus impact
+  const shortfallImpact = calculateFutureSavedAmount(
+    monthlyShortfall,
+    retirementResults.pre_retirement_return,
+    yearsToRetirement
+  );
+
+  // Current slider value
+  let currentSliderValue = 0;
+
+  // Build HTML content
+  scenarioPanel.innerHTML = `
+    <h3 class="panel-title">Explore Budget Scenarios</h3>
+    
+    <div class="bg-blue-50 p-4 rounded-lg mb-4">
+      <p class="mb-2">Your current budget funds <strong>${retirementPercentage}%</strong> of your ideal retirement goal. 
+      Explore how small adjustments to your discretionary spending could impact your retirement readiness.</p>
+      
+      ${
+        hasShortfall
+          ? `
+      <p class="text-sm text-indigo-800">
+        <strong>Key insight:</strong> Shifting just ${minReductionPercent}% of your current discretionary budget 
+        (${formatCurrency(
+          minReductionNeeded
+        )}/month) to retirement would fully fund your retirement goal.
+      </p>
+      `
+          : ""
+      }
+    </div>
+    
+    <div class="mb-6">
+      <h4 class="font-medium mb-3">Adjust Your Discretionary vs. Retirement Balance</h4>
+      
+      <div class="mb-4">
+        <label for="scenario-slider" class="block text-sm font-medium text-gray-700 mb-1">
+          Shift from Discretionary to Retirement:
+          <span id="slider-value">0%</span>
+        </label>
+        <input type="range" id="scenario-slider" min="0" max="${Math.min(
+          100,
+          Math.floor(
+            (currentDiscretionary /
+              retirementResults.required_monthly_savings) *
+              100
+          )
+        )}" 
+               value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <div class="text-sm text-gray-600 mb-1">Current Monthly Allocation</div>
+          <div class="flex items-center mb-2">
+            <div class="w-3 h-3 rounded-full bg-amber-500 mr-2"></div>
+            <div class="text-sm">Discretionary: <span class="font-medium" id="current-discretionary">${formatCurrency(
+              currentDiscretionary
+            )}</span></div>
+          </div>
+          <div class="flex items-center">
+            <div class="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+            <div class="text-sm">Retirement: <span class="font-medium" id="current-retirement">${formatCurrency(
+              currentRetirementSavings
+            )}</span></div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="text-sm text-gray-600 mb-1">Adjusted Monthly Allocation</div>
+          <div class="flex items-center mb-2">
+            <div class="w-3 h-3 rounded-full bg-amber-500 mr-2"></div>
+            <div class="text-sm">Discretionary: <span class="font-medium" id="adjusted-discretionary">${formatCurrency(
+              currentDiscretionary
+            )}</span></div>
+          </div>
+          <div class="flex items-center">
+            <div class="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+            <div class="text-sm">Retirement: <span class="font-medium" id="adjusted-retirement">${formatCurrency(
+              currentRetirementSavings
+            )}</span></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="p-3 rounded-lg border border-gray-200 bg-gray-50 mb-4">
+        <div class="text-sm font-medium mb-2">Long-term Impact of This Adjustment:</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <div class="text-sm text-gray-600">Retirement Funding</div>
+            <div class="text-lg font-bold" id="retirement-funding">${retirementPercentage}%</div>
+            <div class="h-2 w-full bg-gray-200 rounded mt-1">
+              <div class="bg-blue-600 h-2 rounded" id="funding-progress" style="width: ${retirementPercentage}%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="text-sm text-gray-600">Additional Retirement Savings</div>
+            <div class="text-lg font-bold text-green-700" id="additional-savings">+${formatCurrency(
+              0
+            )}</div>
+            <div class="text-xs text-gray-500" id="corpus-impact">After ${yearsToRetirement} years: +${formatCurrency(
+    0
+  )}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex justify-center">
+        <button id="optimize-retirement-btn" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+          Optimize for Full Retirement
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Add event listeners
+  setTimeout(() => {
+    const slider = document.getElementById("scenario-slider");
+    const sliderValue = document.getElementById("slider-value");
+    const currentDiscretionaryElem = document.getElementById(
+      "current-discretionary"
+    );
+    const currentRetirementElem = document.getElementById("current-retirement");
+    const adjustedDiscretionaryElem = document.getElementById(
+      "adjusted-discretionary"
+    );
+    const adjustedRetirementElem = document.getElementById(
+      "adjusted-retirement"
+    );
+    const retirementFundingElem = document.getElementById("retirement-funding");
+    const fundingProgressElem = document.getElementById("funding-progress");
+    const additionalSavingsElem = document.getElementById("additional-savings");
+    const corpusImpactElem = document.getElementById("corpus-impact");
+    const optimizeBtn = document.getElementById("optimize-retirement-btn");
+
+    if (slider) {
+      slider.addEventListener("input", function (e) {
+        currentSliderValue = parseInt(e.target.value);
+        updateScenarioUI();
+      });
+    }
+
+    if (optimizeBtn) {
+      optimizeBtn.addEventListener("click", function () {
+        // Set slider to minimum needed for full funding
+        if (slider) {
+          slider.value = minReductionPercent;
+          currentSliderValue = parseInt(minReductionPercent);
+          updateScenarioUI();
+        }
+      });
+    }
+
+    function updateScenarioUI() {
+      // Update slider value display
+      if (sliderValue) sliderValue.textContent = `${currentSliderValue}%`;
+
+      // Calculate new allocations
+      const reductionAmount = (currentDiscretionary * currentSliderValue) / 100;
+      const newDiscretionary = currentDiscretionary - reductionAmount;
+      const newRetirement = currentRetirementSavings + reductionAmount;
+
+      // Calculate new retirement funding percentage
+      const newFundingPercent = Math.min(
+        100,
+        Math.round(
+          (newRetirement / retirementResults.required_monthly_savings) * 100
+        )
+      );
+
+      // Update UI elements
+      if (adjustedDiscretionaryElem)
+        adjustedDiscretionaryElem.textContent =
+          formatCurrency(newDiscretionary);
+      if (adjustedRetirementElem)
+        adjustedRetirementElem.textContent = formatCurrency(newRetirement);
+      if (retirementFundingElem)
+        retirementFundingElem.textContent = `${newFundingPercent}%`;
+      if (fundingProgressElem)
+        fundingProgressElem.style.width = `${newFundingPercent}%`;
+
+      // Calculate impact on savings
+      const monthlySavingsIncrease = reductionAmount;
+      const annualSavingsIncrease = monthlySavingsIncrease * 12;
+
+      // Calculate corpus impact
+      const corpusIncrease = calculateFutureSavedAmount(
+        monthlySavingsIncrease,
+        retirementResults.pre_retirement_return,
+        yearsToRetirement
+      );
+
+      if (additionalSavingsElem)
+        additionalSavingsElem.textContent = `+${formatCurrency(
+          monthlySavingsIncrease
+        )}`;
+      if (corpusImpactElem)
+        corpusImpactElem.textContent = `After ${yearsToRetirement} years: +${formatCurrency(
+          corpusIncrease
+        )}`;
+    }
+  }, 100);
 }
 
 function addSavingsCapWarning(userData, retirementResults) {
@@ -859,7 +1408,7 @@ function updateRetirementDetailsTable(userData, retirementResults) {
   const table = document.getElementById("retirement-details-table");
   table.innerHTML = "";
 
-  // Add details rows
+  // Add details rows with improved labels and explanations
   const details = [
     {
       label: "Current Monthly Expenses",
@@ -870,10 +1419,6 @@ function updateRetirementDetailsTable(userData, retirementResults) {
       value: formatCurrency(retirementResults.future_monthly_expenses),
       tooltip:
         "Your current expenses adjusted for inflation over the years until retirement",
-    },
-    {
-      label: "Future Annual Expenses at Retirement",
-      value: formatCurrency(retirementResults.future_annual_expenses),
     },
     {
       label: "Years Until Retirement",
@@ -900,53 +1445,39 @@ function updateRetirementDetailsTable(userData, retirementResults) {
         "How much your current savings will grow to by retirement, assuming consistent returns",
     },
     {
-      label: "Additional Corpus Needed",
-      value: formatCurrency(
-        Math.max(0, retirementResults.additional_corpus_needed)
-      ),
-      tooltip:
-        "The amount you still need to save beyond what your current savings will grow to",
-    },
-    {
-      label: "Projected Total Corpus",
-      value: formatCurrency(
-        retirementResults.future_value_of_current_savings +
-          calculateFutureSavedAmount(
-            retirementResults.recommended_monthly_savings,
-            retirementResults.pre_retirement_return,
-            userData.retirementAge - userData.age
-          )
-      ),
-      tooltip:
-        "Total projected corpus based on current savings plus recommended monthly contributions",
-      class: "font-semibold bg-blue-50",
-    },
-    {
-      label: "Ideal Monthly Savings Needed",
+      label: "Mathematically Required Monthly Savings",
       value: formatCurrency(retirementResults.required_monthly_savings),
       tooltip:
-        "This is the amount you would ideally need to save each month to reach your retirement goal",
+        "The exact amount needed each month to reach your retirement goal, if mathematically possible",
+      class: "font-semibold",
     },
     {
-      label: "Capped Monthly Savings (Income Limit)",
-      value: formatCurrency(retirementResults.recommended_monthly_savings),
-      tooltip: `This is limited to ${(
-        MAX_RETIREMENT_SAVINGS_PERCENT[userData.incomeTier] * 100
-      ).toFixed(0)}% of your income as a practical budget constraint`,
-      class:
-        retirementResults.required_monthly_savings >
-        retirementResults.recommended_monthly_savings
-          ? "text-red-600"
-          : "",
-    },
-    {
-      label: "Recommended Monthly Savings",
+      label: "Available in Budget for Retirement",
       value: formatCurrency(retirementResults.recommended_monthly_savings),
       tooltip:
-        "This is your ideal monthly savings amount based on your retirement goals and current budget",
+        "The amount your current budget can allocate to retirement savings",
+      class: "font-semibold",
     },
   ];
-  // Add new rows for deficit information
+
+  // Add new row for enhanced retirement options
+  if (
+    retirementResults.required_monthly_savings <
+    retirementResults.recommended_monthly_savings
+  ) {
+    details.push({
+      label: "Additional Saving Opportunity",
+      value: formatCurrency(
+        retirementResults.recommended_monthly_savings -
+          retirementResults.required_monthly_savings
+      ),
+      tooltip:
+        "You can save more than the required minimum. This extra amount could be used for enhanced retirement, early retirement, or other financial goals.",
+      class: "text-green-600 font-semibold",
+    });
+  }
+
+  // Add shortfall information if necessary
   if (
     retirementResults.required_monthly_savings >
     retirementResults.recommended_monthly_savings
@@ -959,17 +1490,13 @@ function updateRetirementDetailsTable(userData, retirementResults) {
       retirementResults.pre_retirement_return,
       userData.retirementAge - userData.age
     );
-    const reducedMonthlyIncome =
-      ((retirementResults.total_corpus_required - corpusShortfall) *
-        retirementResults.safe_withdrawal_rate) /
-      12;
 
     details.push({
       label: "Monthly Savings Shortfall",
       value: formatCurrency(shortfall),
       class: "text-red-600",
       tooltip:
-        "The difference between what you need to save and what's within your income limit",
+        "The gap between what you need to save and what's currently possible in your budget",
     });
 
     details.push({
@@ -977,36 +1504,11 @@ function updateRetirementDetailsTable(userData, retirementResults) {
       value: formatCurrency(corpusShortfall),
       class: "text-red-600",
       tooltip:
-        "The amount your retirement corpus will be short if you only save the capped amount",
-    });
-
-    details.push({
-      label: "Projected Monthly Retirement Income",
-      value: formatCurrency(reducedMonthlyIncome),
-      tooltip:
-        "Your estimated monthly income in retirement with the capped savings amount",
-    });
-
-    // Add percent of expenses covered
-    const percentCovered =
-      (reducedMonthlyIncome / retirementResults.future_monthly_expenses) * 100;
-    details.push({
-      label: "% of Retirement Expenses Covered",
-      value: percentCovered.toFixed(1) + "%",
-      class: percentCovered < 90 ? "text-red-600" : "text-green-600",
-      tooltip:
-        "How much of your retirement expenses will be covered by your projected corpus",
-    });
-  }
-  // Show excess if applicable
-  if (retirementResults.excess > 0) {
-    details.push({
-      label: "Projected Surplus",
-      value: formatCurrency(retirementResults.excess),
-      class: "text-green-600",
+        "The amount your retirement corpus will be short if you save at your current budget amount",
     });
   }
 
+  // Render all rows
   details.forEach((detail) => {
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -1889,21 +2391,57 @@ function updateRetirementReadiness(retirementResults) {
     retirementTab.appendChild(readinessSection);
   }
 
-  // Get readiness data
-  const readiness = retirementResults.retirement_readiness;
+  // Calculate more accurate readiness metrics based on recommended savings
+  const expenseCoverageRatio = Math.min(
+    1,
+    retirementResults.recommended_monthly_savings /
+      retirementResults.required_monthly_savings
+  );
+
+  // Calculate readiness score based primarily on expense coverage
+  let readinessScore;
+  if (expenseCoverageRatio >= 0.98) {
+    readinessScore = 95 + (expenseCoverageRatio - 0.98) * 250; // Max 100
+    readinessScore = Math.min(100, readinessScore);
+  } else if (expenseCoverageRatio >= 0.9) {
+    readinessScore = 80 + (expenseCoverageRatio - 0.9) * 187.5;
+  } else if (expenseCoverageRatio >= 0.75) {
+    readinessScore = 60 + (expenseCoverageRatio - 0.75) * 133.3;
+  } else if (expenseCoverageRatio >= 0.5) {
+    readinessScore = 40 + (expenseCoverageRatio - 0.5) * 80;
+  } else {
+    readinessScore = expenseCoverageRatio * 80;
+  }
+
+  // Round to nearest integer
+  readinessScore = Math.round(readinessScore);
+
+  // Determine status based on score
+  let status;
+  if (readinessScore >= 90) {
+    status = "Excellent";
+  } else if (readinessScore >= 75) {
+    status = "Good";
+  } else if (readinessScore >= 50) {
+    status = "Fair";
+  } else if (readinessScore >= 25) {
+    status = "Needs Attention";
+  } else {
+    status = "Critical";
+  }
 
   // Determine color based on score
   let scoreColor, bgColor;
-  if (readiness.score >= 90) {
+  if (readinessScore >= 90) {
     scoreColor = "text-green-700";
     bgColor = "bg-green-100";
-  } else if (readiness.score >= 75) {
+  } else if (readinessScore >= 75) {
     scoreColor = "text-green-600";
     bgColor = "bg-green-50";
-  } else if (readiness.score >= 50) {
+  } else if (readinessScore >= 50) {
     scoreColor = "text-yellow-700";
     bgColor = "bg-yellow-50";
-  } else if (readiness.score >= 25) {
+  } else if (readinessScore >= 25) {
     scoreColor = "text-orange-700";
     bgColor = "bg-orange-50";
   } else {
@@ -1911,39 +2449,55 @@ function updateRetirementReadiness(retirementResults) {
     bgColor = "bg-red-50";
   }
 
-  // FIXED: Calculate the savings and corpus ratios correctly
-  const savingsRatio =
-    retirementResults.recommended_monthly_savings /
-    retirementResults.required_monthly_savings;
+  // Generate personalized next steps
+  let nextSteps = [];
+  if (readinessScore < 50) {
+    // Significant shortfall
+    nextSteps = [
+      "Increase your monthly retirement savings if possible",
+      "Consider delaying retirement by a few years",
+      "Review expenses to find additional savings opportunities",
+      "Explore options for increasing your income",
+      "Consult with a financial advisor for personalized strategies",
+    ];
+  } else if (readinessScore < 75) {
+    // Moderate shortfall
+    nextSteps = [
+      "Gradually increase your retirement savings rate",
+      "Optimize your investment strategy for better returns",
+      "Ensure you're maximizing any employer retirement benefits",
+      "Review and reduce unnecessary expenses",
+    ];
+  } else if (readinessScore < 90) {
+    // On track but room for improvement
+    nextSteps = [
+      "Maintain your current savings habit",
+      "Review your investment mix annually",
+      "Consider increasing savings when you receive raises",
+      "Stay informed about retirement planning strategies",
+    ];
+  } else {
+    // Excellent position
+    nextSteps = [
+      "Continue your excellent saving habits",
+      "Consider options for early retirement",
+      "Explore wealth transfer and legacy planning",
+      "Review investment risk as you approach retirement",
+    ];
+  }
 
-  const corpusRatio =
-    retirementResults.retirement_readiness.projected_corpus /
-    retirementResults.total_corpus_required;
-
-  // Calculate expense coverage correctly
-  const expenseCoverageRatio = Math.min(1, corpusRatio);
-
-  // Format the ratios as percentages
-  const savingsPercentage = (savingsRatio * 100).toFixed(1);
-  const corpusPercentage = (corpusRatio * 100).toFixed(1);
-  const expenseCoveragePercentage = (expenseCoverageRatio * 100).toFixed(1);
-
-  // Create content with explanations for transparency
+  // Create content
   readinessSection.innerHTML = `
   <h3 class="panel-title">Retirement Readiness Assessment</h3>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <div class="col-span-1">
       <div class="flex flex-col items-center ${bgColor} p-4 rounded-lg">
         <h4 class="font-medium mb-2">Readiness Score</h4>
-        <div class="text-4xl font-bold ${scoreColor} mb-2">${
-    readiness.score
-  }/100</div>
-        <div class="font-medium ${scoreColor} mb-2">${readiness.status}</div>
+        <div class="text-4xl font-bold ${scoreColor} mb-2">${readinessScore}/100</div>
+        <div class="font-medium ${scoreColor} mb-2">${status}</div>
         <div class="w-full bg-gray-200 rounded-full h-2.5 mb-1">
           <div class="h-2.5 rounded-full" 
-              style="width: ${
-                readiness.score
-              }%; background-color: var(--color-${scoreColor.replace(
+              style="width: ${readinessScore}%; background-color: var(--${scoreColor.replace(
     "text-",
     ""
   )})"></div>
@@ -1954,7 +2508,9 @@ function updateRetirementReadiness(retirementResults) {
           <span>Excellent</span>
         </div>
         <div class="mt-3 text-xs text-gray-600 text-center">
-          <p>Based primarily on your projected ability to cover ${expenseCoveragePercentage}% of retirement expenses</p>
+          <p>Based on your ability to cover ${(
+            expenseCoverageRatio * 100
+          ).toFixed(0)}% of retirement expenses</p>
         </div>
       </div>
     </div>
@@ -1980,54 +2536,403 @@ function updateRetirementReadiness(retirementResults) {
           <div class="mt-1 mb-1 relative">
             <div class="w-full h-4 border border-gray-300 rounded-full overflow-hidden">
               <div class="bg-blue-600 h-full absolute left-0 top-0 z-0" 
-                  style="width: ${Math.min(100, savingsRatio * 100)}%"></div>
+                  style="width: ${Math.min(
+                    100,
+                    expenseCoverageRatio * 100
+                  )}%"></div>
               <div class="relative z-10 text-xs text-white text-center py-0.5">
-                ${savingsPercentage}% of needed
+                ${(expenseCoverageRatio * 100).toFixed(0)}% of needed
               </div>
             </div>
           </div>
         </div>
         <div>
-          <div class="text-sm text-gray-500">Retirement Corpus</div>
+          <div class="text-sm text-gray-500">Retirement Lifestyle</div>
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <div class="text-xs text-gray-500">Projected</div>
-              <div class="font-medium">${formatCurrency(
-                readiness.projected_corpus
-              )}</div>
+              <div class="text-xs text-gray-500">Expected</div>
+              <div class="font-medium">${(expenseCoverageRatio * 100).toFixed(
+                0
+              )}%</div>
             </div>
             <div>
-              <div class="text-xs text-gray-500">Required</div>
-              <div class="font-medium">${formatCurrency(
-                retirementResults.total_corpus_required
-              )}</div>
+              <div class="text-xs text-gray-500">Target</div>
+              <div class="font-medium">100%</div>
             </div>
           </div>
-          <div class="mt-1 mb-1 relative">
-            <div class="w-full h-4 border border-gray-300 rounded-full overflow-hidden">
-              <div class="bg-blue-600 h-full absolute left-0 top-0 z-0" 
-                  style="width: ${Math.min(100, corpusRatio * 100)}%"></div>
-              <div class="relative z-10 text-xs text-white text-center py-0.5">
-  ${expenseCoveragePercentage}% of needed
-</div>
-            </div>
+          <div class="mt-1 mb-1 text-xs text-gray-600">
+            ${
+              expenseCoverageRatio < 1
+                ? `You may need to adjust your retirement lifestyle or increase savings`
+                : `You're on track for your target retirement lifestyle`
+            }
           </div>
         </div>
       </div>
       
-      <div class="bg-gray-50 p-3 rounded-lg text-sm mb-3">
-        <p><strong>Retirement Expense Coverage:</strong> Your projected retirement income is expected to cover <strong>${expenseCoveragePercentage}%</strong> of your retirement expenses.</p>
-      </div>
-      
       <h4 class="font-medium mb-2">Next Steps</h4>
       <ul class="list-disc pl-5 space-y-1 text-sm">
-        ${readiness.next_steps.map((step) => `<li>${step}</li>`).join("")}
+        ${nextSteps.map((step) => `<li>${step}</li>`).join("")}
       </ul>
     </div>
   </div>
 `;
 }
+/**
+ * Adds an actionable guidance panel based on the user's retirement situation
+ *
+ * @param {Object} userData User profile information
+ * @param {Object} retirementResults Retirement calculation results
+ */
+function addRetirementGuidancePanel(userData, retirementResults) {
+  // Check if panel already exists and remove it
+  const existingPanel = document.getElementById("retirement-guidance-panel");
+  if (existingPanel) {
+    existingPanel.remove();
+  }
 
+  // Create guidance panel
+  const guidancePanel = document.createElement("div");
+  guidancePanel.id = "retirement-guidance-panel";
+  guidancePanel.className = "panel mt-6";
+
+  // Determine guidance type based on retirement situation
+  let guidanceTitle = "";
+  let guidanceContent = "";
+  let guidanceClass = "";
+
+  if (
+    retirementResults.required_monthly_savings >
+    retirementResults.recommended_monthly_savings
+  ) {
+    // SHORTFALL SITUATION
+    const shortfall =
+      retirementResults.required_monthly_savings -
+      retirementResults.recommended_monthly_savings;
+    const shortfallPercent = (
+      (shortfall / userData.monthlyIncome) *
+      100
+    ).toFixed(1);
+
+    guidanceTitle = "Addressing Your Retirement Savings Gap";
+    guidanceClass = "bg-yellow-50 border-l-4 border-yellow-400";
+
+    // Different guidance based on shortfall severity
+    if (shortfallPercent > 20) {
+      // Major shortfall
+      guidanceContent = `
+        <p class="mb-3">You have a significant retirement savings gap of ${formatCurrency(
+          shortfall
+        )} monthly (${shortfallPercent}% of income).</p>
+        <p class="mb-3">With your current savings rate, you're projected to fund approximately ${Math.round(
+          (retirementResults.recommended_monthly_savings /
+            retirementResults.required_monthly_savings) *
+            100
+        )}% of your target retirement lifestyle.</p>
+        
+        <h4 class="font-medium mb-2">Consider these options:</h4>
+        <ul class="list-disc pl-5 space-y-1">
+          <li>Find ways to increase your income through career advancement or side opportunities</li>
+          <li>Review and reduce current expenses to free up more for retirement savings</li>
+          <li>Adjust retirement expectations (later retirement date or more modest lifestyle)</li>
+          <li>Explore higher-return investment options if aligned with your risk tolerance</li>
+          <li>Seek professional financial advice for personalized retirement strategies</li>
+        </ul>
+      `;
+    } else {
+      // Moderate shortfall
+      guidanceContent = `
+        <p class="mb-3">You have a moderate retirement savings gap of ${formatCurrency(
+          shortfall
+        )} monthly (${shortfallPercent}% of income).</p>
+        <p class="mb-3">With your current savings rate, you're projected to fund approximately ${Math.round(
+          (retirementResults.recommended_monthly_savings /
+            retirementResults.required_monthly_savings) *
+            100
+        )}% of your target retirement lifestyle.</p>
+        
+        <h4 class="font-medium mb-2">Steps to consider:</h4>
+        <ul class="list-disc pl-5 space-y-1">
+          <li>Look for small expenses you can reduce to increase retirement savings</li>
+          <li>Increase your savings rate gradually (1% every 6 months)</li>
+          <li>Optimize tax-advantaged retirement accounts</li>
+          <li>Review your investment strategy for potential improvements</li>
+        </ul>
+      `;
+    }
+  } else if (
+    retirementResults.required_monthly_savings <
+    retirementResults.recommended_monthly_savings
+  ) {
+    // SURPLUS SITUATION
+    const surplus =
+      retirementResults.recommended_monthly_savings -
+      retirementResults.required_monthly_savings;
+    const surplusPercent = ((surplus / userData.monthlyIncome) * 100).toFixed(
+      1
+    );
+
+    guidanceTitle = "Optimizing Your Retirement Surplus";
+    guidanceClass = "bg-green-50 border-l-4 border-green-400";
+
+    guidanceContent = `
+      <p class="mb-3">You're in an excellent position! Your budget allows for ${formatCurrency(
+        surplus
+      )} more in monthly retirement savings than mathematically required.</p>
+      
+      <h4 class="font-medium mb-2">Ways to leverage this advantage:</h4>
+      <ul class="list-disc pl-5 space-y-1">
+        <li><strong>Enhanced Retirement:</strong> Continue saving the full amount for a more luxurious retirement</li>
+        <li><strong>Early Retirement:</strong> Use the surplus to potentially retire ${calculateEarlyRetirementYears(
+          surplus,
+          retirementResults
+        )} years earlier</li>
+        <li><strong>Legacy Planning:</strong> Build wealth to pass on to future generations</li>
+        <li><strong>Balance Goals:</strong> Redirect some surplus to other financial priorities (education, travel, etc.)</li>
+        <li><strong>Flexible Future:</strong> Maintain higher savings to give yourself more options later</li>
+      </ul>
+    `;
+  } else {
+    // BALANCED SITUATION
+    guidanceTitle = "Your Retirement Plan Is On Track";
+    guidanceClass = "bg-blue-50 border-l-4 border-blue-400";
+
+    guidanceContent = `
+      <p class="mb-3">Your current budget allocates exactly the amount needed for your retirement goals.</p>
+      
+      <h4 class="font-medium mb-2">Maintaining your retirement health:</h4>
+      <ul class="list-disc pl-5 space-y-1">
+        <li>Stay consistent with your current savings rate</li>
+        <li>Review your retirement plan annually</li>
+        <li>Adjust for major life changes (income increases, family changes)</li>
+        <li>Consider increasing savings rate when expenses decrease</li>
+        <li>Optimize investment strategy as you approach retirement</li>
+      </ul>
+    `;
+  }
+
+  // Build the panel HTML
+  guidancePanel.innerHTML = `
+    <h3 class="panel-title">${guidanceTitle}</h3>
+    <div class="p-4 rounded-lg ${guidanceClass}">
+      ${guidanceContent}
+    </div>
+  `;
+
+  // Add to retirement tab before retirement readiness section
+  const retirementReadinessSection = document.getElementById(
+    "retirement-readiness-section"
+  );
+  if (retirementReadinessSection) {
+    retirementReadinessSection.parentNode.insertBefore(
+      guidancePanel,
+      retirementReadinessSection
+    );
+  } else {
+    // If readiness section doesn't exist, append to tab
+    document.getElementById("retirement-tab").appendChild(guidancePanel);
+  }
+}
+/**
+ * Adds a visual representation comparing target vs actual retirement
+ *
+ * @param {Object} userData User profile information
+ * @param {Object} retirementResults Retirement calculation results
+ */
+function addRetirementComparisonVisual(userData, retirementResults) {
+  // Check if visual already exists
+  const existingVisual = document.getElementById(
+    "retirement-comparison-visual"
+  );
+  if (existingVisual) {
+    existingVisual.remove();
+  }
+
+  // Calculate retirement funding percentage
+  const fundingPercentage = Math.min(
+    100,
+    Math.round(
+      (retirementResults.recommended_monthly_savings /
+        retirementResults.required_monthly_savings) *
+        100
+    )
+  );
+
+  // Create the visual container
+  const visualContainer = document.createElement("div");
+  visualContainer.id = "retirement-comparison-visual";
+  visualContainer.className = "panel mt-6";
+
+  // Calculate expected monthly retirement income based on current savings rate
+  const expectedCorpus =
+    retirementResults.future_value_of_current_savings +
+    calculateFutureSavedAmount(
+      retirementResults.recommended_monthly_savings,
+      retirementResults.pre_retirement_return,
+      userData.retirementAge - userData.age
+    );
+
+  const monthlyRetirementIncome =
+    (expectedCorpus * retirementResults.safe_withdrawal_rate) / 12;
+
+  // Calculate target monthly income
+  const targetMonthlyIncome =
+    (retirementResults.total_corpus_required *
+      retirementResults.safe_withdrawal_rate) /
+    12;
+
+  // Determine retirement quality descriptors
+  let retirementQuality = "";
+  let qualityColor = "";
+
+  if (fundingPercentage >= 100) {
+    retirementQuality = "Your Target Lifestyle";
+    qualityColor = "text-green-600";
+  } else if (fundingPercentage >= 80) {
+    retirementQuality = "Comfortable but Adjusted";
+    qualityColor = "text-blue-600";
+  } else if (fundingPercentage >= 60) {
+    retirementQuality = "Modest Lifestyle";
+    qualityColor = "text-yellow-600";
+  } else if (fundingPercentage >= 40) {
+    retirementQuality = "Basic Necessities";
+    qualityColor = "text-orange-600";
+  } else {
+    retirementQuality = "Financial Challenges";
+    qualityColor = "text-red-600";
+  }
+
+  // Build the visual HTML
+  visualContainer.innerHTML = `
+    <h3 class="panel-title">Your Retirement Picture</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 p-4">
+      <!-- Target Retirement -->
+      <div class="text-center">
+        <h4 class="font-medium mb-3">Target Retirement</h4>
+        <div class="p-4 bg-green-50 rounded-lg mb-3">
+          <div class="inline-block p-3 rounded-full bg-green-100 mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="text-2xl font-bold text-green-700 mb-1">
+            ${formatCurrency(targetMonthlyIncome)}
+          </div>
+          <div class="text-sm text-green-800">Monthly Income</div>
+        </div>
+        <div class="text-sm text-gray-600">
+          This is the retirement lifestyle you've targeted based on your current expenses and inflation projections.
+        </div>
+      </div>
+      
+      <!-- Projected Retirement -->
+      <div class="text-center">
+        <h4 class="font-medium mb-3">Your Projected Retirement</h4>
+        <div class="p-4 ${
+          fundingPercentage >= 100 ? "bg-green-50" : "bg-yellow-50"
+        } rounded-lg mb-3">
+          <div class="inline-block p-3 rounded-full ${
+            fundingPercentage >= 100 ? "bg-green-100" : "bg-yellow-100"
+          } mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 ${
+              fundingPercentage >= 100 ? "text-green-600" : "text-yellow-600"
+            }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                ${
+                  fundingPercentage >= 100
+                    ? 'd="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"'
+                    : 'd="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"'
+                } />
+            </svg>
+          </div>
+          <div class="text-2xl font-bold ${
+            fundingPercentage >= 100 ? "text-green-700" : "text-yellow-700"
+          } mb-1">
+            ${formatCurrency(monthlyRetirementIncome)}
+          </div>
+          <div class="text-sm ${qualityColor} font-medium">${retirementQuality}</div>
+        </div>
+        <div class="text-sm text-gray-600">
+          Based on your current savings rate, you're on track to fund <strong>${fundingPercentage}%</strong> of your target retirement lifestyle.
+        </div>
+      </div>
+    </div>
+    
+    <!-- Progress bar -->
+    <div class="mt-4 px-4 pb-4">
+      <div class="flex justify-between mb-1">
+        <span class="text-sm font-medium">Funding Progress: ${fundingPercentage}%</span>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-4">
+        <div class="h-4 rounded-full ${getFundingProgressColor(
+          fundingPercentage
+        )}" 
+          style="width: ${fundingPercentage}%"></div>
+      </div>
+      <div class="flex justify-between mt-2 text-xs text-gray-500">
+        <span>0%</span>
+        <span>25%</span>
+        <span>50%</span>
+        <span>75%</span>
+        <span>100%</span>
+      </div>
+      
+      <div class="mt-4 text-sm text-center">
+        ${getRetirementAdvice(fundingPercentage)}
+      </div>
+    </div>
+  `;
+
+  // Add helper functions within scope
+  function getFundingProgressColor(percentage) {
+    if (percentage >= 100) return "bg-green-500";
+    if (percentage >= 75) return "bg-green-400";
+    if (percentage >= 50) return "bg-yellow-400";
+    if (percentage >= 25) return "bg-orange-400";
+    return "bg-red-400";
+  }
+
+  function getRetirementAdvice(percentage) {
+    if (percentage >= 100) {
+      return "You're fully on track for your retirement goals. Consider if you'd like to enhance your retirement lifestyle or retire earlier.";
+    } else if (percentage >= 75) {
+      return "You're making excellent progress. A small increase in savings or minor lifestyle adjustments in retirement can close the gap.";
+    } else if (percentage >= 50) {
+      return "You're halfway to your goal. Consider increasing your savings rate or exploring ways to enhance your investment returns.";
+    } else if (percentage >= 25) {
+      return "You have a foundation to build on. Look for opportunities to increase your retirement savings or adjust your retirement expectations.";
+    } else {
+      return "You're at the beginning of your retirement journey. Focus on building your savings rate while exploring ways to increase income.";
+    }
+  }
+
+  // Add to retirement tab
+  const retirementTab = document.getElementById("retirement-tab");
+  const readinessSection = document.getElementById(
+    "retirement-readiness-section"
+  );
+
+  if (readinessSection) {
+    retirementTab.insertBefore(visualContainer, readinessSection);
+  } else {
+    retirementTab.appendChild(visualContainer);
+  }
+}
+/**
+ * Estimates potential early retirement years based on surplus savings
+ *
+ * @param {number} surplusSavings Monthly surplus savings amount
+ * @param {Object} retirementResults Retirement calculation results
+ * @returns {number} Potential years of earlier retirement
+ */
+function calculateEarlyRetirementYears(surplusSavings, retirementResults) {
+  // Simple estimation: Extra savings as percentage of required could roughly
+  // translate to percentage of time reduced from retirement timeline
+  const savingsRatio =
+    surplusSavings / retirementResults.required_monthly_savings;
+  // Cap at 10 years for realism
+  return Math.min(Math.round(savingsRatio * 10), 10);
+}
 // === INVESTMENT TAB UI UPDATES ===
 
 /**
@@ -2424,7 +3329,21 @@ function updateWealthBuildingPlan(userData, investmentResults) {
 function updateOptimizationTab(userData, optimizationResults, budgetResults) {
   const container = document.getElementById("optimization-opportunities");
   container.innerHTML = "";
-
+  // Add new explanation section
+  const explanationSection = document.createElement("div");
+  explanationSection.className = "bg-blue-50 p-4 rounded-lg mb-6";
+  explanationSection.innerHTML = `
+  <h4 class="font-medium mb-2">Understanding Your Budget Opportunities</h4>
+  <p class="text-sm mb-2">
+    Your current budget balances present needs with future goals. This section shows areas where 
+    you could reallocate funds if you wanted to increase your retirement savings.
+  </p>
+  <p class="text-sm">
+    These are opportunities, not requirements. Finding the right balance between enjoying today 
+    and saving for tomorrow is a personal choice.
+  </p>
+`;
+  container.appendChild(explanationSection);
   if (!optimizationResults.has_opportunities) {
     const noOpportunities = document.createElement("div");
     noOpportunities.className = "text-center py-4 text-gray-500";
@@ -2490,39 +3409,44 @@ function updateOptimizationTab(userData, optimizationResults, budgetResults) {
     const header = document.createElement("div");
     header.className = "p-4 border-b bg-gray-50";
     header.innerHTML = `
-      <div class="flex justify-between items-center">
-        <div class="opportunity-title font-semibold">${categoryName}</div>
-        <div class="opportunity-amount text-green-600 font-semibold">
-          Save up to ${formatCurrency(opportunity.potential_savings.moderate)}
-        </div>
-      </div>
-    `;
+  <div class="flex justify-between items-center">
+    <div class="opportunity-title font-semibold">${categoryName}</div>
+    <div class="opportunity-amount text-blue-600 font-semibold">
+      Opportunity: ${formatCurrency(opportunity.potential_savings.moderate)}
+    </div>
+  </div>
+`;
 
     // Card details
     const details = document.createElement("div");
     details.className = "p-4 border-b";
     details.innerHTML = `
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <div class="flex justify-between items-center mb-2">
-            <div class="text-sm text-gray-600">Current Spending</div>
-            <div class="font-medium">${formatCurrency(
-              opportunity.current_spending
-            )}</div>
-          </div>
-          <div class="flex justify-between items-center mb-2">
-            <div class="text-sm text-gray-600">Benchmark</div>
-            <div class="font-medium">${formatCurrency(
-              opportunity.benchmark
-            )}</div>
-          </div>
-          <div class="flex justify-between items-center">
-            <div class="text-sm text-gray-600">Excess</div>
-            <div class="font-medium text-red-500">+${opportunity.excess_percentage.toFixed(
-              0
-            )}%</div>
-          </div>
-        </div>
+  <div class="grid grid-cols-1 gap-4">
+    <div>
+      <div class="flex justify-between items-center mb-2">
+        <div class="text-sm text-gray-600">Current Recommended Allocation</div>
+        <div class="font-medium">${formatCurrency(
+          opportunity.current_spending
+        )}</div>
+      </div>
+      <div class="flex justify-between items-center mb-2">
+        <div class="text-sm text-gray-600">Typical for Your Income Level</div>
+        <div class="font-medium">${formatCurrency(opportunity.benchmark)}</div>
+      </div>
+      <div class="bg-blue-50 p-3 rounded-lg mt-2 text-sm">
+        <p>Your budget provides a higher ${categoryName.toLowerCase()} allocation than typical. 
+        This reflects your financial capacity, but you could redirect some of these funds to 
+        retirement if you prefer.</p>
+        <p class="mt-2">Redirecting about ${formatCurrency(
+          opportunity.potential_savings.moderate
+        )} 
+        would still leave you with an above-average lifestyle while boosting your retirement by 
+        ${formatCurrency(
+          opportunity.potential_savings.moderate * 12
+        )} per year.</p>
+      </div>
+    </div>
+  </div>
         <div>
           <div class="mb-2">
             <div class="text-sm text-gray-600 mb-1">Spending vs. Benchmark</div>
@@ -2916,13 +3840,17 @@ function createComparisonToolUI() {
 
   // Add compare buttons to all scenario cards
   document.querySelectorAll("#retirement-scenarios > div").forEach((card) => {
-    const scenarioName = card.querySelector("h5").textContent;
-    const compareBtn = document.createElement("button");
-    compareBtn.className =
-      "compare-scenario-btn text-xs px-2 py-1 bg-indigo-100 text-indigo-800 rounded hover:bg-indigo-200 mt-2";
-    compareBtn.textContent = "Compare";
-    compareBtn.setAttribute("data-scenario", scenarioNameToId(scenarioName));
-    card.appendChild(compareBtn);
+    const h5Element = card.querySelector("h5");
+    if (h5Element) {
+      // Check if h5 element exists
+      const scenarioName = h5Element.textContent;
+      const compareBtn = document.createElement("button");
+      compareBtn.className =
+        "compare-scenario-btn text-xs px-2 py-1 bg-indigo-100 text-indigo-800 rounded hover:bg-indigo-200 mt-2";
+      compareBtn.textContent = "Compare";
+      compareBtn.setAttribute("data-scenario", scenarioNameToId(scenarioName));
+      card.appendChild(compareBtn);
+    }
   });
 }
 

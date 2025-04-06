@@ -1296,7 +1296,14 @@ function calculateBenchmarksForProfile(userData) {
       max: 0.2,
     },
   };
-
+  // Adjust discretionary percentages based on income tier
+  if (userData.incomeTier === "HIGH" || userData.incomeTier === "ULTRA_HIGH") {
+    baseBenchmarks.discretionary.typical = 0.25; // 25% for high income
+    baseBenchmarks.discretionary.max = 0.35; // 35% max
+  } else if (userData.incomeTier === "MIDDLE") {
+    baseBenchmarks.discretionary.typical = 0.15; // 15% for middle income
+    baseBenchmarks.discretionary.max = 0.25; // 25% max
+  }
   // Adjust percentages based on income tier
   let incomeTierAdjustment = 1.0; // Default multiplier
 

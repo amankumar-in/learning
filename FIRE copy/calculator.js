@@ -136,7 +136,7 @@ function calculateBudgetAllocation(userData) {
     // Current-focused: Maintain minimum retirement savings
     retirementSavings = Math.min(
       cappedRetirementSavings,
-      Math.max(minimumSavings, requiredMonthlySavings * 0.6)
+      Math.max(minimumSavings, requiredMonthlySavings * 0.3)
     );
   }
 
@@ -165,6 +165,14 @@ function calculateBudgetAllocation(userData) {
   }
 
   // Step 5: Calculate Category and Subcategory Allocations
+
+  // Short-term savings breakdown
+  const shortTermSavingsBreakdown = {
+    emergency_fund: shortTermSavings * 0.5,
+    major_expenses: shortTermSavings * 0.3,
+    life_goals: shortTermSavings * 0.2,
+  };
+
   const housingBreakdown = {
     rent_or_emi: housing * 0.85,
     maintenance: housing * 0.1,
@@ -289,6 +297,7 @@ function calculateBudgetAllocation(userData) {
       personal: personalBreakdown,
       household: householdBreakdown,
       discretionary: discretionaryBreakdown,
+      short_term_savings: shortTermSavingsBreakdown, // Add this line
     },
 
     // Metrics
@@ -640,6 +649,22 @@ function calculateRetirementCorpus(userData, budgetResults) {
   );
 
   // Combine all results
+  // Calculate how much is available from budget (from budget results)
+  const budgetAvailableForRetirement =
+    budgetResults.retirement_savings ||
+    userData.monthlyIncome *
+      MAX_RETIREMENT_SAVINGS_PERCENT[userData.incomeTier];
+
+  // Determine if ideal amount can be achieved with current budget
+  const isIdealAchievable =
+    requiredMonthlySavings <= budgetAvailableForRetirement;
+
+  // Set recommended amount based on financial reality and goals
+  // If ideal is achievable, use that amount, otherwise use what's available
+  const recommendedAmount = isIdealAchievable
+    ? requiredMonthlySavings
+    : budgetAvailableForRetirement;
+
   return {
     // Current monthly expenses
     current_monthly_expenses: currentMonthlyExpenses,
@@ -666,11 +691,9 @@ function calculateRetirementCorpus(userData, budgetResults) {
     future_value_of_current_savings: futureValueOfCurrentSavings,
     additional_corpus_needed: additionalCorpusNeeded,
     required_monthly_savings: requiredMonthlySavings,
-    recommended_monthly_savings: Math.min(
-      requiredMonthlySavings,
-      userData.monthlyIncome *
-        MAX_RETIREMENT_SAVINGS_PERCENT[userData.incomeTier]
-    ),
+    budget_available: budgetAvailableForRetirement,
+    recommended_monthly_savings: recommendedAmount,
+    ideal_achievable: isIdealAchievable,
     excess: excess,
 
     // Rate assumptions
