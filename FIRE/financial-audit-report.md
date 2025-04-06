@@ -747,7 +747,7 @@ function calculateEducationExpenses(familyComposition, locationMultiplier) {
 }
 ```
 
-### 6.4. No Handling of Dual-Income Households
+### 6.4. No Handling of Dual-Income Households - done
 
 **Problem:** System assumes single-income households without any accommodation for dual earners.
 

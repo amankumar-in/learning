@@ -269,16 +269,34 @@ function calculateFutureSavedAmount(monthlySavings, annualRate, years) {
  */
 // In updateSummaryMetrics function in ui.js
 function updateSummaryMetrics(userData, budgetResults, retirementResults) {
-  // Update monthly income value (renamed from "budget")
-  document.getElementById("monthly-budget-value").textContent = formatCurrency(
-    userData.monthlyIncome
-  );
+  // Check if we have dual income
+  const hasDualIncome = budgetResults.household_income.has_dual_income;
+  const totalIncome = budgetResults.household_income.total;
 
-  // New label for the first card to clarify it's income
+  // Update monthly income value
+  document.getElementById("monthly-budget-value").innerHTML = `
+      <div>${formatCurrency(totalIncome)}</div>
+      ${
+        hasDualIncome
+          ? `
+          <div class="text-sm font-normal text-gray-600">
+              Primary: ${formatCurrency(userData.monthlyIncome)} 
+              <span class="mx-1">•</span> 
+              Secondary: ${formatCurrency(userData.secondaryIncome)}
+          </div>
+      `
+          : ""
+      }
+  `;
+
+  // New label for the first card to clarify it's household income
   const budgetLabel = document.querySelector(
     ".dashboard-summary .metric-card:nth-child(1) h3"
   );
-  if (budgetLabel) budgetLabel.textContent = "Monthly Income";
+  if (budgetLabel)
+    budgetLabel.textContent = hasDualIncome
+      ? "Household Income"
+      : "Monthly Income";
 
   // Update retirement corpus value
   document.getElementById("retirement-corpus-value").innerHTML = `

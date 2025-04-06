@@ -2,6 +2,39 @@
 // === BUDGET ALLOCATION ENGINE ===
 
 function calculateBudgetAllocation(userData) {
+  // Calculate total household income from all family members
+  function calculateTotalHouseholdIncome(userData) {
+    let totalIncome = userData.monthlyIncome; // Primary income
+    let secondaryIncome = 0;
+
+    // Loop through family members to add income contributors
+    if (
+      userData.familyComposition &&
+      Array.isArray(userData.familyComposition)
+    ) {
+      userData.familyComposition.forEach((member) => {
+        if (member.relationship !== "self" && member.income > 0) {
+          secondaryIncome += member.income;
+        }
+      });
+    }
+
+    return {
+      totalIncome: totalIncome + secondaryIncome,
+      primaryIncome: totalIncome,
+      secondaryIncome: secondaryIncome,
+      hasDualIncome: secondaryIncome > 0,
+    };
+  }
+
+  // Inside calculateBudgetAllocation(), near the beginning:
+  const incomeData = calculateTotalHouseholdIncome(userData);
+  const totalIncome = incomeData.totalIncome;
+  const hasDualIncome = incomeData.hasDualIncome;
+
+  // Store secondary income for reference throughout the function
+  userData.secondaryIncome = incomeData.secondaryIncome;
+
   // Step 1: Calculate Base Essential Expenses
   // Use the family expense calculator for detailed family-specific calculations
   const familyExpenses = FamilyExpenseCalculator.calculateFamilyExpenses(
@@ -18,6 +51,15 @@ function calculateBudgetAllocation(userData) {
   let education = familyExpenses.education;
   let personal = familyExpenses.personal;
   let household = familyExpenses.household;
+
+  // This can vary based on expense category
+  const sharedExpenseAdjustment = hasDualIncome ? 0.8 : 1.0; // 10% reduction for truly shared expenses
+
+  // Apply adjustments to appropriate expense categories
+  housing = housing * sharedExpenseAdjustment; // Housing is fully shared
+  utilities = utilities * sharedExpenseAdjustment; // Utilities are fully shared
+  food = food * sharedExpenseAdjustment; // Food has some economies of scale
+  household = household * sharedExpenseAdjustment; // Household expenses are shared
 
   // IMPORTANT: Keep the existing housing situation adjustments
   if (userData.housingStatus === "owned_fully") {
@@ -559,19 +601,23 @@ function calculateBudgetAllocation(userData) {
       discretionary: discretionaryBreakdown,
       short_term_savings: shortTermSavingsBreakdown, // Add this line
     },
-
-    // Metrics
-    metrics: {
-      savings_rate:
-        (retirementSavings + shortTermSavings) / userData.monthlyIncome,
-      essential_rate: totalEssentials / userData.monthlyIncome,
-      discretionary_rate: discretionary / userData.monthlyIncome,
-      debt_payment_rate: debtPayment / userData.monthlyIncome, // latest change
-
-      retirement_rate: retirementSavings / userData.monthlyIncome,
-      required_savings_rate: requiredSavingsRate,
-      capped_savings_rate: actualSavingsRate,
+    // Household income breakdown
+    household_income: {
+      primary: userData.monthlyIncome,
+      secondary: userData.secondaryIncome,
+      total: totalIncome,
+      has_dual_income: hasDualIncome,
     },
+
+    // Update metrics to use total household income
+    metrics: {
+      savings_rate: (retirementSavings + shortTermSavings) / totalIncome,
+      essential_rate: adjustedTotalEssentials / totalIncome,
+      discretionary_rate: discretionary / totalIncome,
+      retirement_rate: retirementSavings / totalIncome,
+      secondary_income_ratio: userData.secondaryIncome / totalIncome,
+      shared_expense_adjustment: sharedExpenseAdjustment,
+    }, // Added closing brace and comma here
 
     // User's income tier for reference
     income_tier: userData.incomeTier,
