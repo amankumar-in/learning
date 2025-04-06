@@ -643,7 +643,7 @@ function getContextualOverageThreshold(category, userData) {
 
 ## 6. User Profile & Edge Case Issues
 
-### 6.1. Debt Management Not Integrated
+### 6.1. Debt Management Not Integrated - done
 
 **Problem:** The system collects debt information but doesn't use it for budget planning.
 
@@ -702,7 +702,7 @@ if (userData.incomeVolatility === "HIGH") {
 }
 ```
 
-### 6.3. Family Composition Has Minimal Impact
+### 6.3. Family Composition Has Minimal Impact - done
 
 **Problem:** Family composition details are collected but barely affect calculations.
 
@@ -747,7 +747,7 @@ function calculateEducationExpenses(familyComposition, locationMultiplier) {
 }
 ```
 
-### 6.4. No Handling of Dual-Income Households
+### 6.4. No Handling of Dual-Income Households - done
 
 **Problem:** System assumes single-income households without any accommodation for dual earners.
 

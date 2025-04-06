@@ -311,6 +311,10 @@ function updateFamilyComposition() {
                         <option value="no">No</option>
                     </select>
                 </div>
+                <div class="form-group income-field">
+            <label for="member-${i}-income">Monthly Income (₹)</label>
+            <input type="number" id="member-${i}-income" min="0" value="0" class="form-input">
+        </div>
             </div>
         `;
     container.appendChild(member);
@@ -665,6 +669,8 @@ function collectFamilyComposition() {
         relationship: relationshipEl.value,
         age: parseInt(ageEl.value) || 0,
         dependent: dependentEl.value === "yes",
+        income:
+          parseInt(document.getElementById(`member-${i}-income`).value) || 0,
       });
     }
   }

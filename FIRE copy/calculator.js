@@ -2,40 +2,81 @@
 // === BUDGET ALLOCATION ENGINE ===
 
 function calculateBudgetAllocation(userData) {
-  // Step 1: Calculate Base Essential Expenses
-  const locationMultiplier = LOCATION_MULTIPLIERS[userData.locationTier];
-  let familySizeFactor;
+  // Calculate total household income from all family members
+  function calculateTotalHouseholdIncome(userData) {
+    let totalIncome = userData.monthlyIncome; // Primary income
+    let secondaryIncome = 0;
 
-  // Apply family size factor with special handling for large families
-  if (userData.familySize <= 5) {
-    familySizeFactor = FAMILY_SIZE_FACTORS[userData.familySize];
-  } else {
-    // For families larger than 5, use formula: 1.5 + 0.1 * (N-5)
-    familySizeFactor = 1.5 + 0.1 * (userData.familySize - 5);
+    // Loop through family members to add income contributors
+    if (
+      userData.familyComposition &&
+      Array.isArray(userData.familyComposition)
+    ) {
+      userData.familyComposition.forEach((member) => {
+        if (member.relationship !== "self" && member.income > 0) {
+          secondaryIncome += member.income;
+        }
+      });
+    }
+
+    return {
+      totalIncome: totalIncome + secondaryIncome,
+      primaryIncome: totalIncome,
+      secondaryIncome: secondaryIncome,
+      hasDualIncome: secondaryIncome > 0,
+    };
   }
 
-  // Calculate base essential categories
-  let housing =
-    BASE_ESSENTIAL_EXPENSES.HOUSING * locationMultiplier * familySizeFactor;
-  let food =
-    BASE_ESSENTIAL_EXPENSES.FOOD * locationMultiplier * familySizeFactor;
-  let utilities =
-    BASE_ESSENTIAL_EXPENSES.UTILITIES * locationMultiplier * familySizeFactor;
-  let transport =
-    BASE_ESSENTIAL_EXPENSES.TRANSPORT * locationMultiplier * familySizeFactor;
-  let healthcare =
-    BASE_ESSENTIAL_EXPENSES.HEALTHCARE * locationMultiplier * familySizeFactor;
-  let personal =
-    BASE_ESSENTIAL_EXPENSES.PERSONAL * locationMultiplier * familySizeFactor;
-  let household =
-    BASE_ESSENTIAL_EXPENSES.HOUSEHOLD * locationMultiplier * familySizeFactor;
+  // Inside calculateBudgetAllocation(), near the beginning:
+  const incomeData = calculateTotalHouseholdIncome(userData);
+  const totalIncome = incomeData.totalIncome;
+  const hasDualIncome = incomeData.hasDualIncome;
 
-  // Education depends on number of children
-  const childrenCount = getChildrenCount(userData.familyComposition);
-  let education =
-    BASE_ESSENTIAL_EXPENSES.EDUCATION_PER_CHILD *
-    childrenCount *
-    locationMultiplier;
+  // Store secondary income for reference throughout the function
+  userData.secondaryIncome = incomeData.secondaryIncome;
+
+  // Step 1: Calculate Base Essential Expenses
+  // Use the family expense calculator for detailed family-specific calculations
+  const familyExpenses = FamilyExpenseCalculator.calculateFamilyExpenses(
+    userData,
+    BASE_ESSENTIAL_EXPENSES
+  );
+
+  // Get the calculated expenses
+  let housing = familyExpenses.housing;
+  let food = familyExpenses.food;
+  let utilities = familyExpenses.utilities;
+  let transport = familyExpenses.transport;
+  let healthcare = familyExpenses.healthcare;
+  let education = familyExpenses.education;
+  let personal = familyExpenses.personal;
+  let household = familyExpenses.household;
+
+  // This can vary based on expense category
+  const sharedExpenseAdjustment = hasDualIncome ? 0.8 : 1.0; // 10% reduction for truly shared expenses
+
+  // Apply adjustments to appropriate expense categories
+  housing = housing * sharedExpenseAdjustment; // Housing is fully shared
+  utilities = utilities * sharedExpenseAdjustment; // Utilities are fully shared
+  food = food * sharedExpenseAdjustment; // Food has some economies of scale
+  household = household * sharedExpenseAdjustment; // Household expenses are shared
+
+  // IMPORTANT: Keep the existing housing situation adjustments
+  if (userData.housingStatus === "owned_fully") {
+    // Calculate adjustment amount before reducing
+    housingAdjustment = housing * 0.7; // 70% savings
+
+    // Remove rent component, add property tax and higher maintenance
+    housing = housing * 0.3; // Reduces to just maintenance and taxes
+  } else if (userData.housingStatus === "loan") {
+    // Check if EMI is provided by user
+    if (userData.housingEmi > 0) {
+      housing = userData.housingEmi + housing * 0.15; // EMI + maintenance
+    } else {
+      // Estimate EMI based on typical home values in this location tier
+      housing = estimateTypicalEmi(userData.locationTier) + housing * 0.15;
+    }
+  }
 
   // Step 2: Apply Housing Situation Adjustments
   let housingAdjustment = 0;
@@ -361,6 +402,13 @@ function calculateBudgetAllocation(userData) {
     rent_or_emi: housing * 0.85,
     maintenance: housing * 0.1,
     property_tax: housing * 0.05,
+    // Include additional details from family calculator
+    bedrooms_required: familyExpenses.housing_breakdown
+      ? familyExpenses.housing_breakdown.bedrooms
+      : 0,
+    housing_adjustment_factor: familyExpenses.housing_breakdown
+      ? familyExpenses.housing_breakdown.housingAdjustment
+      : 1,
   };
 
   const foodBreakdown = {
@@ -368,6 +416,12 @@ function calculateBudgetAllocation(userData) {
     dairy: food * 0.15,
     eating_out: food * 0.15,
     ordering_in: food * 0.1,
+    age_specific: familyExpenses.food_breakdown
+      ? familyExpenses.food_breakdown
+      : {},
+    scaling_factor: familyExpenses.food_breakdown
+      ? familyExpenses.food_breakdown.scalingFactor
+      : 1,
   };
 
   const utilitiesBreakdown = {
@@ -382,6 +436,9 @@ function calculateBudgetAllocation(userData) {
     maintenance: transport * 0.2,
     public_transport: transport * 0.3,
     rideshare_taxi: transport * 0.1,
+    purpose_specific: familyExpenses.transport_breakdown
+      ? familyExpenses.transport_breakdown
+      : {},
   };
 
   const healthcareBreakdown = {
@@ -389,6 +446,10 @@ function calculateBudgetAllocation(userData) {
     medications: healthcare * 0.2,
     doctor_visits: healthcare * 0.3,
     wellness: healthcare * 0.1,
+    // Add age-specific breakdown
+    age_specific: familyExpenses.healthcare_breakdown
+      ? familyExpenses.healthcare_breakdown
+      : {},
   };
 
   const educationBreakdown = {
@@ -396,6 +457,25 @@ function calculateBudgetAllocation(userData) {
     supplies: education * 0.1,
     tutoring: education * 0.1,
     extracurricular: education * 0.1,
+    // Add detailed age-specific breakdown
+    preschool: familyExpenses.education_breakdown
+      ? familyExpenses.education_breakdown.preschool || 0
+      : 0,
+    primary: familyExpenses.education_breakdown
+      ? familyExpenses.education_breakdown.primary || 0
+      : 0,
+    middle: familyExpenses.education_breakdown
+      ? familyExpenses.education_breakdown.middle || 0
+      : 0,
+    secondary: familyExpenses.education_breakdown
+      ? familyExpenses.education_breakdown.secondary || 0
+      : 0,
+    college: familyExpenses.education_breakdown
+      ? familyExpenses.education_breakdown.college || 0
+      : 0,
+    higher_education: familyExpenses.education_breakdown
+      ? familyExpenses.education_breakdown.higher_education || 0
+      : 0,
   };
 
   const personalBreakdown = {
@@ -455,7 +535,27 @@ function calculateBudgetAllocation(userData) {
       )} due to fully owned home, increasing your overall financial flexibility.`
     );
   }
+  // latest change
+  // Add debt management logic
+  let debtPayment = 0;
+  const debtPaymentBreakdown = { minimum_payment: 0, additional_payment: 0 };
 
+  if (userData.currentDebt > userData.monthlyIncome * 3) {
+    // High debt situation, adjust allocations
+    debtPayment = discretionary * 0.2 + shortTermSavings * 0.1;
+    discretionary = discretionary * 0.8;
+    shortTermSavings = shortTermSavings * 0.9;
+
+    // Create debt payment breakdown
+    debtPaymentBreakdown.minimum_payment = debtPayment * 0.7;
+    debtPaymentBreakdown.additional_payment = debtPayment * 0.3;
+
+    // Add guidance note about debt management
+    guidanceNotes.push(
+      "High debt detected - allocating funds for accelerated debt repayment."
+    );
+  }
+  // =============
   // Combine all categories into a budget plan
   const budget = {
     // Main category totals
@@ -470,6 +570,7 @@ function calculateBudgetAllocation(userData) {
     retirement_savings: retirementSavings,
     short_term_savings: shortTermSavings,
     discretionary,
+    debt_payment: debtPayment, // latest change
 
     // Calculated totals
     total_essentials: adjustedTotalEssentials, // Use adjustedTotalEssentials instead
@@ -478,7 +579,8 @@ function calculateBudgetAllocation(userData) {
       adjustedTotalEssentials +
       retirementSavings +
       shortTermSavings +
-      discretionary,
+      discretionary +
+      debtPayment, // latest change
 
     // Deficit if any
     deficit,
@@ -493,22 +595,29 @@ function calculateBudgetAllocation(userData) {
       transport: transportBreakdown,
       healthcare: healthcareBreakdown,
       education: educationBreakdown,
+      debt_payment: debtPaymentBreakdown, // latest change
       personal: personalBreakdown,
       household: householdBreakdown,
       discretionary: discretionaryBreakdown,
       short_term_savings: shortTermSavingsBreakdown, // Add this line
     },
-
-    // Metrics
-    metrics: {
-      savings_rate:
-        (retirementSavings + shortTermSavings) / userData.monthlyIncome,
-      essential_rate: totalEssentials / userData.monthlyIncome,
-      discretionary_rate: discretionary / userData.monthlyIncome,
-      retirement_rate: retirementSavings / userData.monthlyIncome,
-      required_savings_rate: requiredSavingsRate,
-      capped_savings_rate: actualSavingsRate,
+    // Household income breakdown
+    household_income: {
+      primary: userData.monthlyIncome,
+      secondary: userData.secondaryIncome,
+      total: totalIncome,
+      has_dual_income: hasDualIncome,
     },
+
+    // Update metrics to use total household income
+    metrics: {
+      savings_rate: (retirementSavings + shortTermSavings) / totalIncome,
+      essential_rate: adjustedTotalEssentials / totalIncome,
+      discretionary_rate: discretionary / totalIncome,
+      retirement_rate: retirementSavings / totalIncome,
+      secondary_income_ratio: userData.secondaryIncome / totalIncome,
+      shared_expense_adjustment: sharedExpenseAdjustment,
+    }, // Added closing brace and comma here
 
     // User's income tier for reference
     income_tier: userData.incomeTier,
