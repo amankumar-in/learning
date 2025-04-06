@@ -375,7 +375,7 @@ const housing =
   incomeScaling;
 ```
 
-## 4. Asset Allocation & Investment Issues
+## 4. Asset Allocation & Investment Issues - future
 
 ### 4.1. Age-Based Asset Allocation Too Simplistic
 
@@ -429,7 +429,7 @@ function calculateEquityAllocation(userData, marketConditions) {
 }
 ```
 
-### 4.2. Tax Efficiency Calculation Problems
+### 4.2. Tax Efficiency Calculation Problems - future
 
 **Problem:** Tax efficiency is only considered for brackets above 20%, and ignores recent tax law changes.
 
@@ -475,7 +475,7 @@ function adjustForTaxEfficiency(debtAllocation, taxBracket, adjustmentFactor) {
 
 ## 5. Expense Category Allocation Issues
 
-### 5.1. Emergency Fund/Short-Term Savings Issues
+### 5.1. Emergency Fund/Short-Term Savings Issues - done
 
 **Problem:** Short-term savings often get zero allocation or are inconsistently calculated.
 
@@ -514,7 +514,7 @@ const shortTermSavings = Math.max(
 );
 ```
 
-### 5.2. Housing Status Impact Problems
+### 5.2. Housing Status Impact Problems - done
 
 **Problem:** Housing status (owned vs. loan vs. rented) has inappropriate effects on budget.
 
@@ -548,7 +548,7 @@ if (userData.housingStatus === "owned_fully") {
 }
 ```
 
-### 5.3. Benchmark Calculation Problems for Optimization
+### 5.3. Benchmark Calculation Problems for Optimization - future
 
 **Problem:** Expense optimization uses simple income percentages that don't account for important factors.
 
@@ -603,7 +603,7 @@ function getLifeStageFactor(age, familyComposition) {
 }
 ```
 
-### 5.4. Optimization Opportunity Detection Too Rigid
+### 5.4. Optimization Opportunity Detection Too Rigid - future
 
 **Problem:** The system flags any spending >20% above "typical" as an optimization opportunity without context.
 

@@ -35,9 +35,39 @@ function applyPriorityAdjustments(userData, budgetData) {
   const adjustedStSavingsPercent =
     baseStSavingsPercent * tierAdjustments.shortterm_multiplier;
 
-  // Calculate short-term savings and discretionary
-  const shortTermSavings = remainingFunds * adjustedStSavingsPercent;
-  const discretionary = remainingFunds * (1 - adjustedStSavingsPercent);
+  // Estimate monthly expenses from available data
+  const monthlyExpenses =
+    userData.monthlyExpenses ||
+    userData.monthlyIncome - budgetData.disposableIncome;
+
+  // Calculate emergency fund target
+  const emergencyFundTarget =
+    monthlyExpenses * EMERGENCY_FUND_TARGETS[userData.incomeTier];
+
+  // Estimate current emergency fund - assume 30% of current savings is for emergencies
+  const estimatedEmergencyFund = userData.currentSavings
+    ? userData.currentSavings * 0.3
+    : 0;
+
+  // Calculate emergency fund gap
+  const emergencyFundGap = Math.max(
+    0,
+    emergencyFundTarget - estimatedEmergencyFund
+  );
+
+  // Set minimum short-term savings if emergency fund isn't established
+  // Fund emergency gap over 24 months (2 years), but cap at 30% of remaining funds
+  const minShortTermSavings =
+    emergencyFundGap > 0
+      ? Math.min(remainingFunds * 0.3, emergencyFundGap / 24)
+      : 0;
+
+  // Calculate short-term savings and discretionary with emergency fund consideration
+  const shortTermSavings = Math.max(
+    minShortTermSavings,
+    remainingFunds * adjustedStSavingsPercent
+  );
+  const discretionary = remainingFunds - shortTermSavings;
 
   // Build and return adjusted budget
   return {

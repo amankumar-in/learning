@@ -1,4 +1,4 @@
-// code - 3344
+// code - 5567
 // === BUDGET ALLOCATION ENGINE ===
 
 function calculateBudgetAllocation(userData) {
@@ -38,16 +38,33 @@ function calculateBudgetAllocation(userData) {
     locationMultiplier;
 
   // Step 2: Apply Housing Situation Adjustments
+  let housingAdjustment = 0;
+
   if (userData.housingStatus === "owned_fully") {
+    // Calculate adjustment amount before reducing
+    housingAdjustment = housing * 0.7; // 70% savings
+
     // Remove rent component, add property tax and higher maintenance
     housing = housing * 0.3; // Reduces to just maintenance and taxes
   } else if (userData.housingStatus === "loan") {
     // Check if EMI is provided by user
     if (userData.housingEmi > 0) {
+      // Validate EMI is not too high relative to income
+      const maxReasonableEmi = userData.monthlyIncome * 0.4; // 40% DTI ratio
+      if (userData.housingEmi > maxReasonableEmi) {
+        // Add to guidance notes rather than modify (provide information, not force change)
+        guidanceNotes.push(
+          `Your housing EMI is ${Math.round(
+            (userData.housingEmi / userData.monthlyIncome) * 100
+          )}% of income, which exceeds recommended 40% debt-to-income ratio.`
+        );
+      }
+
       housing = userData.housingEmi + housing * 0.15; // EMI + maintenance
     } else {
       // Estimate EMI based on typical home values in this location tier
-      housing = estimateTypicalEmi(userData.locationTier) + housing * 0.15;
+      const estimatedEmi = estimateTypicalEmi(userData.locationTier);
+      housing = estimatedEmi + housing * 0.15;
     }
   }
 
@@ -268,6 +285,7 @@ function calculateBudgetAllocation(userData) {
   const cappedRetirementSavings = userData.monthlyIncome * actualSavingsRate;
 
   // Step 4: Calculate disposable income after essentials
+  // Include housingAdjustment to account for owned home savings
   const disposableIncome = userData.monthlyIncome - adjustedTotalEssentials;
   // Calculate minimum savings amount
   const minimumSavings = userData.monthlyIncome * minSavingsRate;
@@ -289,12 +307,40 @@ function calculateBudgetAllocation(userData) {
   // Apply adjusted values
   retirementSavings = priorityAdjustments.retirement_savings;
 
+  /// Calculate emergency fund target for deficit scenarios
+  const monthlyExpenses = userData.monthlyExpenses || totalEssentials;
+  const emergencyFundTarget =
+    monthlyExpenses * EMERGENCY_FUND_TARGETS[userData.incomeTier];
+  const estimatedEmergencyFund = userData.currentSavings
+    ? userData.currentSavings * 0.3
+    : 0;
+  const emergencyFundGap = Math.max(
+    0,
+    emergencyFundTarget - estimatedEmergencyFund
+  );
+  const minEmergencyAllocation =
+    emergencyFundGap > 0
+      ? Math.min(disposableIncome * 0.2, emergencyFundGap / 24)
+      : 0;
+
   // If retirement savings exceeds disposable income
   if (retirementSavings > disposableIncome) {
-    deficit = retirementSavings - disposableIncome;
-    retirementSavings = disposableIncome;
+    // If we have an emergency fund gap, allocate the minimum required amount
+    if (minEmergencyAllocation > 0) {
+      // Ensure retirement savings has room for minimum emergency allocation
+      retirementSavings = Math.max(
+        0,
+        disposableIncome - minEmergencyAllocation
+      );
+      shortTermSavings = minEmergencyAllocation;
+      deficit = retirementSavings - disposableIncome + minEmergencyAllocation;
+    } else {
+      // No emergency fund gap, proceed as before
+      deficit = retirementSavings - disposableIncome;
+      retirementSavings = disposableIncome;
+      shortTermSavings = 0;
+    }
 
-    shortTermSavings = 0;
     discretionary = 0;
   } else {
     // Use adjusted values from priority calculator
@@ -400,6 +446,16 @@ function calculateBudgetAllocation(userData) {
     };
   }
 
+  // Reallocate housing adjustment for fully owned homes
+  if (housingAdjustment > 0) {
+    // Add guidance note
+    guidanceNotes.push(
+      `Your housing costs are reduced by ${formatCurrency(
+        housingAdjustment
+      )} due to fully owned home, increasing your overall financial flexibility.`
+    );
+  }
+
   // Combine all categories into a budget plan
   const budget = {
     // Main category totals
@@ -416,10 +472,13 @@ function calculateBudgetAllocation(userData) {
     discretionary,
 
     // Calculated totals
-    total_essentials: totalEssentials,
+    total_essentials: adjustedTotalEssentials, // Use adjustedTotalEssentials instead
     total_savings: retirementSavings + shortTermSavings,
     total_budget:
-      totalEssentials + retirementSavings + shortTermSavings + discretionary,
+      adjustedTotalEssentials +
+      retirementSavings +
+      shortTermSavings +
+      discretionary,
 
     // Deficit if any
     deficit,
