@@ -499,14 +499,14 @@ body {
     --text-color: #fff;
     --light-text: #ccc;
     --shadow-color: rgba(0, 0, 0, 0.3);
-    --primary-color: #15182e; /* Very dark blue for header */
-    --secondary-color: #191d3e; /* Dark blue for search section */
+    --primary-color: #1e2030; /* Very dark blue for header */
+    --secondary-color: #2f3145; /* Dark blue for search section */
     --accent-color: #e65100; /* Darker orange for buttons/highlights */
   }
 
   /* Dark background for the page in desktop view */
   body {
-    background: linear-gradient(135deg, #012253, #001728);
+    background: linear-gradient(135deg, #1e2836, #101920);
   }
 
   /* Ensure the app header is dark */
