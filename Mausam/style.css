@@ -489,3 +489,56 @@ body {
     background: rgba(255, 255, 255, 0.2);
   }
 }
+
+/* Dark mode improvements - Replace your existing dark mode media query with this */
+@media (prefers-color-scheme: dark) {
+  /* Dark theme variables */
+  :root {
+    --background-color: #333;
+    --card-color: #424242;
+    --text-color: #fff;
+    --light-text: #ccc;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --primary-color: #15182e; /* Very dark blue for header */
+    --secondary-color: #191d3e; /* Dark blue for search section */
+    --accent-color: #e65100; /* Darker orange for buttons/highlights */
+  }
+
+  /* Dark background for the page in desktop view */
+  body {
+    background: linear-gradient(135deg, #012253, #001728);
+  }
+
+  /* Ensure the app header is dark */
+  .app-header {
+    background: var(--primary-color);
+  }
+
+  /* Ensure the search section is dark */
+  .search-section {
+    background: var(--secondary-color);
+  }
+
+  /* Improve icon visibility */
+  .weather-icon-container {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .forecast-icon {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Make quirky message background darker */
+  .quirky-message {
+    background: #d84315;
+  }
+
+  /* Improve search button contrast */
+  .search-btn {
+    background: #fb8c00;
+  }
+
+  .search-btn:hover {
+    background: #ef6c00;
+  }
+}
