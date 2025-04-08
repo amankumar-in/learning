@@ -29,34 +29,68 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Quirky messages based on weather conditions
+  // Quirky messages based on weather conditions and temperature
   function getQuirkyMessage(temp, weatherId) {
+    // Temperature takes priority for extreme conditions
     if (temp > 40) {
       return "Aaj log jalenge! 🔥 Pani peete rehna!";
     } else if (temp > 35) {
-      return "Garmi se bhunne ka mausam hai! AC on karo! 🥵";
-    } else if (weatherId >= 600 && weatherId < 700) {
-      return "Lagta hai aaj barf girne wali hai! ❄️ Garme kapde nikalo!";
+      return "Ye toh bas trailer hai! 🥵";
+    } else if (temp < -10) {
+      return "Aaj Kisi ne fridge khula chhod diya hai ❄️";
+    } else if (temp < 0) {
+      return "Pani khate rehna 🧊 Double jacket pehno!";
+    } else if (temp < 5) {
+      return "Rajai me ghus jao! 🥶";
+    } else if (temp < 10) {
+      return "Vicks ki goli ready rakhna 🧣 Jacket ya sweater pehen lo!";
+    }
+
+    // After extreme temperatures, consider weather conditions
+    if (weatherId >= 600 && weatherId < 700) {
+      if (temp < 0) {
+        return "Barf gir rahi hai aur jamne wali thand hai! ❄️ Ghar pe hi raho!";
+      } else {
+        return "Lagta hai aaj barf girne wali hai! ❄️ Garme kapde nikalo!";
+      }
     } else if (weatherId >= 500 && weatherId < 600) {
-      return "Chai aur pakode banao! ☔ Barish ho rahi hai!";
+      if (temp < 15) {
+        return "Thand ke saath barish bhi! ☔ Chai aur pakode perfect rahenge!";
+      } else {
+        return "Chai aur pakode banao! ☔ Barish ho rahi hai!";
+      }
     } else if (weatherId >= 300 && weatherId < 400) {
       return "Halki baarish hai, chhata le lena! 🌧️";
     } else if (weatherId >= 200 && weatherId < 300) {
       return "Aaj bijli kadakne wali hai! ⚡ Ghar pe raho!";
     } else if (weatherId >= 700 && weatherId < 800) {
-      return "Dhundh chhayi hui hai, dhyan se chalein! 🌫️";
+      if (temp < 10) {
+        return "Ye dhuan dhuan sa rahega 🌫️ Dhyan se chalein!";
+      } else {
+        return "Bahar kuchh dikh raha? Mujhe bhi nahi 🌫️";
+      }
     } else if (weatherId === 800) {
       if (temp > 25 && temp <= 35) {
-        return "Mausam suhana hai, ghoomne jao! 🌞";
-      } else if (temp > 15 && temp <= 25) {
         return "Mausam theek hai, kuchh kaam kar lo! 😌";
+      } else if (temp > 15 && temp <= 25) {
+        return "Mausam suhana hai, ghoomne jao! 🌞";
+      } else if (temp > 10 && temp <= 15) {
+        return "Aaj photo acchi aayegi! 🌥️";
       } else {
-        return "Thandi hai, jacket pehen lo! 🧥";
+        return "Dhoop hai par thand bhi! Jacket pehen lo! 🧥";
       }
     } else if (weatherId > 800) {
-      return "Badal chhaye hain, barish ho sakti hai! ☁️";
+      if (temp < 15) {
+        return "Aaj toh chhutti honi chahiye ☁️";
+      } else {
+        return "Mehdi Hassan wala mausam! ☁️";
+      }
     } else {
-      return "Ajeeb mausam hai aaj! 🤔";
+      if (temp < 10) {
+        return "Thand to hai hi! 🥶 Aur kya surprises hain?";
+      } else {
+        return "Ajeeb mausam hai aaj! 🤔";
+      }
     }
   }
 
@@ -113,6 +147,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const windSpeed = Math.round(data.current.wind_speed * 3.6); // Convert m/s to km/h
     const pressure = data.current.pressure;
 
+    // Get the daily high and low for today
+    const todayHigh = Math.round(data.daily[0].temp.max);
+    const todayLow = Math.round(data.daily[0].temp.min);
+
     // Set quirky message
     quirkMessage.textContent = getQuirkyMessage(currentTemp, weatherId);
 
@@ -127,6 +165,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("wind-speed").textContent = `${windSpeed} km/h`;
     document.getElementById("pressure").textContent = `${pressure} hPa`;
 
+    // Update high/low temperatures
+    document.getElementById("temp-high").textContent = `${todayHigh}°`;
+    document.getElementById("temp-low").textContent = `${todayLow}°`;
+
     // Update 5-day forecast
     forecastItems.innerHTML = "";
 
@@ -137,14 +179,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const dayName = formatDay(day.dt);
       const dayTemp = Math.round(day.temp.day);
       const dayIcon = day.weather[0].icon;
+      const dayHigh = Math.round(day.temp.max);
+      const dayLow = Math.round(day.temp.min);
 
       const forecastItem = document.createElement("div");
       forecastItem.className = "forecast-item";
       forecastItem.innerHTML = `
-                        <div class="forecast-day">${dayName}</div>
-                        <img src="https://openweathermap.org/img/wn/${dayIcon}.png" alt="Weather" class="forecast-icon">
-                        <div class="forecast-temp">${dayTemp}°C</div>
-                    `;
+                <div class="forecast-day">${dayName}</div>
+                <img src="https://openweathermap.org/img/wn/${dayIcon}.png" alt="Weather" class="forecast-icon">
+                <div class="forecast-temp">${dayTemp}°C</div>
+                <div class="forecast-high-low">
+                    <span class="forecast-high">${dayHigh}°</span>/<span class="forecast-low">${dayLow}°</span>
+                </div>
+            `;
 
       forecastItems.appendChild(forecastItem);
     });

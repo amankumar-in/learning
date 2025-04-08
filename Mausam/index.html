@@ -1,109 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mausam - Weather App</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
     <div class="app-container">
-        <!-- App Header -->
-        <div class="app-header">
-            <div class="app-title">Mausam</div>
-            <div class="app-subtitle">Your Personalized Weather Companion</div>
-        </div>
+      <!-- App Header -->
+      <div class="app-header">
+        <div class="app-title">Mausam</div>
+        <div class="app-subtitle">Ab Mausam ki fikar humpe chhod do!</div>
+      </div>
 
-        <!-- Search Section -->
-        <div class="search-section">
-            <i class="fas fa-location-dot location-icon"></i>
-            <input type="text" class="search-input" placeholder="Enter city name">
-            <div class="edit-message">Edit location and press search or Enter</div>
-            <button class="search-btn">
-                <i class="fas fa-search"></i>
-            </button>
-        </div>
+      <!-- Search Section -->
+      <div class="search-section">
+        <i class="fas fa-location-dot location-icon"></i>
+        <input type="text" class="search-input" placeholder="Enter city name" />
+        <div class="edit-message">Edit location and press search or Enter</div>
+        <button class="search-btn">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
 
-        <!-- Loading Section -->
-        <div class="loading-section">
-            <div class="loading-spinner"></div>
-            <div class="loading-text">Fetching the latest weather data...</div>
-        </div>
+      <!-- Loading Section -->
+      <div class="loading-section">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Fetching the latest weather data...</div>
+      </div>
 
-        <!-- Error Section -->
-        <div class="error-section">
-            <div class="error-icon">
-                <i class="fas fa-cloud-rain"></i>
+      <!-- Error Section -->
+      <div class="error-section">
+        <div class="error-icon">
+          <i class="fas fa-cloud-rain"></i>
+        </div>
+        <div class="error-message">Oops! Something went wrong.</div>
+        <div class="error-hint">Please check the city name and try again.</div>
+      </div>
+
+      <!-- Weather Display Section -->
+      <div class="weather-section">
+        <div class="quirky-message">Loading your personalized weather...</div>
+
+        <div class="current-weather">
+          <div class="weather-info">
+            <div class="temperature">--°C</div>
+            <div class="high-low">
+              <span id="temp-high">--°</span> / <span id="temp-low">--°</span>
             </div>
-            <div class="error-message">Oops! Something went wrong.</div>
-            <div class="error-hint">Please check the city name and try again.</div>
+            <div class="weather-description">Weather description</div>
+          </div>
+          <div class="weather-icon-container">
+            <img src="" alt="Weather Icon" class="weather-icon" />
+          </div>
         </div>
 
-        <!-- Weather Display Section -->
-        <div class="weather-section">
-            <div class="quirky-message">Loading your personalized weather...</div>
-            
-            <div class="current-weather">
-                <img src="" alt="Weather Icon" class="weather-icon">
-                <div class="temperature">--°C</div>
-                <div class="weather-description">Weather description</div>
+        <div class="weather-details">
+          <div class="detail-card">
+            <div class="detail-icon">
+              <i class="fas fa-temperature-high"></i>
             </div>
-            
-            <div class="weather-details">
-                <div class="detail-card">
-                    <div class="detail-icon">
-                        <i class="fas fa-temperature-high"></i>
-                    </div>
-                    <div class="detail-info">
-                        <div class="detail-value" id="feels-like">--°C</div>
-                        <div class="detail-label">Feels Like</div>
-                    </div>
-                </div>
-                
-                <div class="detail-card">
-                    <div class="detail-icon">
-                        <i class="fas fa-water"></i>
-                    </div>
-                    <div class="detail-info">
-                        <div class="detail-value" id="humidity">--%</div>
-                        <div class="detail-label">Humidity</div>
-                    </div>
-                </div>
-                
-                <div class="detail-card">
-                    <div class="detail-icon">
-                        <i class="fas fa-wind"></i>
-                    </div>
-                    <div class="detail-info">
-                        <div class="detail-value" id="wind-speed">-- km/h</div>
-                        <div class="detail-label">Wind Speed</div>
-                    </div>
-                </div>
-                
-                <div class="detail-card">
-                    <div class="detail-icon">
-                        <i class="fas fa-compress-arrows-alt"></i>
-                    </div>
-                    <div class="detail-info">
-                        <div class="detail-value" id="pressure">-- hPa</div>
-                        <div class="detail-label">Pressure</div>
-                    </div>
-                </div>
+            <div class="detail-info">
+              <div class="detail-value" id="feels-like">--°C</div>
+              <div class="detail-label">Feels Like</div>
             </div>
-        </div>
+          </div>
 
-        <!-- Forecast Section -->
-        <div class="forecast-section">
-            <div class="section-title">5-Day Forecast</div>
-            <div class="daily-forecast">
-                <div class="forecast-items">
-                    <!-- Forecast items will be added here -->
-                </div>
+          <div class="detail-card">
+            <div class="detail-icon">
+              <i class="fas fa-water"></i>
             </div>
+            <div class="detail-info">
+              <div class="detail-value" id="humidity">--%</div>
+              <div class="detail-label">Humidity</div>
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <div class="detail-icon">
+              <i class="fas fa-wind"></i>
+            </div>
+            <div class="detail-info">
+              <div class="detail-value" id="wind-speed">-- km/h</div>
+              <div class="detail-label">Wind Speed</div>
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <div class="detail-icon">
+              <i class="fas fa-compress-arrows-alt"></i>
+            </div>
+            <div class="detail-info">
+              <div class="detail-value" id="pressure">-- hPa</div>
+              <div class="detail-label">Pressure</div>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <!-- Forecast Section -->
+      <div class="forecast-section">
+        <div class="section-title">5-Day Forecast</div>
+        <div class="daily-forecast">
+          <div class="forecast-items">
+            <!-- Forecast items will be added here -->
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="script.js"></script>
-</body>
+  </body>
 </html>
