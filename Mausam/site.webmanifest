@@ -1,21 +1,60 @@
 {
-  "name": "Mausam",
+  "name": "Mausam - Weather App",
   "short_name": "Mausam",
+  "description": "Your personalized weather companion",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#1E88E5",
+  "theme_color": "#1E88E5",
+  "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/web-app-manifest-192x192.png",
-      "sizes": "192x192",
+      "src": "./icons/Assets.xcassets/AppIcon.appiconset/_/72.png",
+      "sizes": "72x72",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     },
     {
-      "src": "/web-app-manifest-512x512.png",
+      "src": "./icons/Assets.xcassets/AppIcon.appiconset/_/100.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/Assets.xcassets/AppIcon.appiconset/_/128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/Assets.xcassets/AppIcon.appiconset/_/144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/Assets.xcassets/AppIcon.appiconset/_/152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/Assets.xcassets/AppIcon.appiconset/_/196.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/Assets.xcassets/AppIcon.appiconset/_/512.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/Assets.xcassets/AppIcon.appiconset/_/512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
-  ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
-  "display": "standalone"
+  ]
 }
