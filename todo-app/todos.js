@@ -2,14 +2,14 @@
 let todos = [
   {
     id: 1,
-    title: "Complete project setup",
-    description: "Set up the project structure and deploy to Render",
+    title: "This is a Todo App",
+    description: "A simple todo app to manage your tasks.",
     completed: true,
   },
   {
     id: 2,
-    title: "Implement todo functionality",
-    description: "Create the backend and frontend for the todo app",
+    title: "Create a new task",
+    description: "Click the '+' button to create a new task.",
     completed: false,
   },
 ];
