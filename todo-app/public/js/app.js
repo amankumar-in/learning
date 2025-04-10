@@ -199,7 +199,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Open edit modal
+  // Fixed openEditModal function
   function openEditModal(todo) {
     document.getElementById("edit-id").value = todo.id;
     document.getElementById("edit-title").value = todo.title;
@@ -215,10 +215,28 @@ document.addEventListener("DOMContentLoaded", () => {
       editImagePreview.appendChild(img);
     }
 
+    // Show the modal
     editModal.style.display = "block";
+
+    // Add visible class to make it actually appear (this was missing)
+    setTimeout(() => editModal.classList.add("visible"), 10);
+
+    // Show the overlay
     overlay.classList.remove("hidden");
     setTimeout(() => overlay.classList.add("visible"), 10);
   }
+
+  // Also fix the closeBtn event listener
+  closeBtn.addEventListener("click", () => {
+    editModal.classList.remove("visible");
+    overlay.classList.remove("visible");
+
+    // Hide after animation completes
+    setTimeout(() => {
+      editModal.style.display = "none";
+      overlay.classList.add("hidden");
+    }, 300);
+  });
 
   // Update todo
   async function updateTodo(e) {
