@@ -745,3 +745,75 @@ input[type="file"] {
 .image-close:hover {
   color: #ddd;
 }
+
+/* Responsive fixes for todo items to prevent image clipping */
+
+/* Make sure the todo item header adapts for mobile screens */
+@media (max-width: 640px) {
+  /* Adjust the todo item padding for smaller screens */
+  .todo-item {
+    padding: 0.875rem 1rem;
+  }
+
+  /* Fix for the todo item header to prevent image clipping */
+  .todo-item-header {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  /* Make the image smaller on mobile */
+  .todo-image {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  /* Ensure the left controls fit on mobile */
+  .left-controls {
+    width: 1.25rem;
+  }
+
+  /* Make sure content area doesn't push images off screen */
+  .todo-content {
+    flex: 1;
+    min-width: 0; /* Critical for preventing overflow */
+    max-width: calc(100% - 4rem); /* Leave room for image */
+  }
+
+  /* Give image container a specific size range */
+  .todo-image-container {
+    min-width: 2.75rem;
+    max-width: 2.75rem;
+  }
+
+  /* Adjust the actions spacing */
+  .todo-actions {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  /* Make action buttons more compact */
+  .todo-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+  }
+}
+
+/* Even smaller screens (phones) */
+@media (max-width: 400px) {
+  /* Adjust overall layout for very small screens */
+  .todo-item-header {
+    align-items: flex-start;
+  }
+
+  /* Further reduce image size */
+  .todo-image {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  /* Stack the action buttons if needed */
+  .todo-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
