@@ -113,7 +113,10 @@ document.addEventListener("DOMContentLoaded", () => {
       // Close the form
       addTodoForm.classList.remove("visible");
       overlay.classList.remove("visible");
-      setTimeout(() => overlay.classList.add("hidden"), 300);
+      setTimeout(() => {
+        overlay.classList.add("hidden");
+        addTodoForm.classList.add("hidden");
+      }, 300);
     } catch (error) {
       console.error("Error adding todo:", error);
     }
