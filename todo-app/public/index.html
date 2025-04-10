@@ -11,7 +11,11 @@
     />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Things To Do</title>
+    <title>Todo List</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
@@ -30,7 +34,12 @@
       </header>
 
       <div class="todos-container">
-        <h2>Tasks</h2>
+        <div class="todos-header">
+          <h2>Tasks</h2>
+          <button id="header-add-btn" class="header-add-btn">
+            <i class="fas fa-plus"></i> Add Task
+          </button>
+        </div>
         <div id="todos-container" class="todo-list">
           <!-- Todo items will be inserted here -->
         </div>
@@ -68,28 +77,58 @@
               placeholder="Enter task description (optional)"
             ></textarea>
           </div>
+          <div class="form-group">
+            <label for="image">Image (optional)</label>
+            <input type="file" id="image" accept="image/*" />
+            <div id="image-preview" class="image-preview"></div>
+          </div>
           <button type="submit" class="submit-btn">Add Task</button>
         </form>
       </div>
     </div>
 
-    <!-- Todo Item Template -->
+    <!-- Todo Item Template - Improved Layout Structure -->
     <template id="todo-template">
       <div class="todo-item">
-        <div class="todo-content">
-          <h3 class="todo-title"></h3>
-          <p class="todo-description"></p>
-        </div>
-        <div class="todo-actions">
-          <button class="todo-btn toggle-btn">
-            <i class="fas fa-check"></i>
-          </button>
-          <button class="todo-btn edit-btn">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="todo-btn delete-btn">
-            <i class="fas fa-trash"></i>
-          </button>
+        <div class="todo-item-header">
+          <!-- Left column: priority dot and move controls -->
+          <div class="left-controls">
+            <div class="priority-indicator">
+              <div class="priority-dot"></div>
+              <div class="priority-line"></div>
+            </div>
+            <!-- Move controls below the dot -->
+            <div class="priority-controls">
+              <button class="priority-btn move-up-btn" title="Move Up">
+                <i class="fas fa-chevron-up"></i>
+              </button>
+              <button class="priority-btn move-down-btn" title="Move Down">
+                <i class="fas fa-chevron-down"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Middle column: content section -->
+          <div class="todo-content">
+            <h3 class="todo-title"></h3>
+            <p class="todo-description"></p>
+
+            <!-- Action buttons at bottom of content section -->
+            <div class="todo-actions">
+              <button class="todo-btn toggle-btn" title="Toggle Status">
+                <i class="fas fa-check"></i> Complete
+              </button>
+              <button class="todo-btn edit-btn" title="Edit Task">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+              <button class="todo-btn delete-btn" title="Delete Task">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </div>
+          </div>
+
+          <!-- Right column: image container -->
+          <div class="todo-image-container"></div>
         </div>
       </div>
     </template>
@@ -121,8 +160,22 @@
               placeholder="Enter task description (optional)"
             ></textarea>
           </div>
+          <div class="form-group">
+            <label for="edit-image">Image (optional)</label>
+            <input type="file" id="edit-image" accept="image/*" />
+            <div id="edit-image-preview" class="image-preview"></div>
+          </div>
           <button type="submit" class="submit-btn">Update Task</button>
         </form>
+      </div>
+    </div>
+
+    <!-- Image Viewer Modal - FIXED -->
+    <div id="image-modal" class="modal">
+      <div class="modal-content image-modal-content">
+        <!-- Added modal-content class -->
+        <span class="image-close">&times;</span>
+        <img id="modal-image" src="" alt="Task Image" />
       </div>
     </div>
 

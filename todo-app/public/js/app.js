@@ -12,6 +12,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeFormBtn = document.getElementById("close-form-btn");
   const overlay = document.getElementById("overlay");
   const emptyState = document.getElementById("empty-state");
+  const headerAddBtn = document.getElementById("header-add-btn");
+  const imageModal = document.getElementById("image-modal");
+  const modalImage = document.getElementById("modal-image");
+  const imageClose = document.querySelector(".image-close");
+  const imageInput = document.getElementById("image");
+  const imagePreview = document.getElementById("image-preview");
+  const editImageInput = document.getElementById("edit-image");
+  const editImagePreview = document.getElementById("edit-image-preview");
 
   let currentFilter = "all";
   let todos = [];
@@ -32,6 +40,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Add task form events
   addTaskBtn.addEventListener("click", () => {
+    addTodoForm.classList.remove("hidden");
+    setTimeout(() => addTodoForm.classList.add("visible"), 10);
+    overlay.classList.remove("hidden");
+    setTimeout(() => overlay.classList.add("visible"), 10);
+  });
+  // Add task button in header
+  headerAddBtn.addEventListener("click", () => {
     addTodoForm.classList.remove("hidden");
     setTimeout(() => addTodoForm.classList.add("visible"), 10);
     overlay.classList.remove("hidden");
@@ -87,10 +102,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const titleInput = document.getElementById("title");
     const descriptionInput = document.getElementById("description");
+    const imageFile = document.getElementById("image").files[0];
+
+    let imagePath = null;
+
+    // Upload image if one is selected
+    if (imageFile) {
+      const formData = new FormData();
+      formData.append("image", imageFile);
+
+      try {
+        const uploadResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (uploadResponse.ok) {
+          const imageData = await uploadResponse.json();
+          imagePath = imageData.imagePath;
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+      }
+    }
 
     const newTodo = {
       title: titleInput.value,
       description: descriptionInput.value,
+      image: imagePath,
     };
 
     try {
@@ -109,6 +148,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // Clear the form
       titleInput.value = "";
       descriptionInput.value = "";
+      document.getElementById("image").value = "";
+      imagePreview.innerHTML = "";
 
       // Close the form
       addTodoForm.classList.remove("visible");
@@ -121,7 +162,6 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error adding todo:", error);
     }
   }
-
   // Toggle todo completion status
   async function toggleTodoStatus(id, completed) {
     try {
@@ -165,6 +205,16 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("edit-title").value = todo.title;
     document.getElementById("edit-description").value = todo.description;
 
+    // Clear previous image preview
+    editImagePreview.innerHTML = "";
+
+    // Show current image if exists
+    if (todo.image) {
+      const img = document.createElement("img");
+      img.src = todo.image;
+      editImagePreview.appendChild(img);
+    }
+
     editModal.style.display = "block";
     overlay.classList.remove("hidden");
     setTimeout(() => overlay.classList.add("visible"), 10);
@@ -177,6 +227,32 @@ document.addEventListener("DOMContentLoaded", () => {
     const id = document.getElementById("edit-id").value;
     const title = document.getElementById("edit-title").value;
     const description = document.getElementById("edit-description").value;
+    const imageFile = document.getElementById("edit-image").files[0];
+
+    // Find the current todo to get the existing image if no new one is selected
+    const currentTodo = todos.find((todo) => todo.id === parseInt(id));
+
+    let imagePath = currentTodo.image;
+
+    // Upload new image if selected
+    if (imageFile) {
+      const formData = new FormData();
+      formData.append("image", imageFile);
+
+      try {
+        const uploadResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (uploadResponse.ok) {
+          const imageData = await uploadResponse.json();
+          imagePath = imageData.imagePath;
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+      }
+    }
 
     try {
       const response = await fetch(`/api/todos/${id}`, {
@@ -184,7 +260,11 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ title, description }),
+        body: JSON.stringify({
+          title,
+          description,
+          image: imagePath,
+        }),
       });
 
       const updatedTodo = await response.json();
@@ -193,7 +273,10 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       renderTodos();
 
-      // Close the modal
+      // Clear the form and close modal
+      document.getElementById("edit-image").value = "";
+      editImagePreview.innerHTML = "";
+
       editModal.style.display = "none";
       overlay.classList.remove("visible");
       setTimeout(() => overlay.classList.add("hidden"), 300);
@@ -201,17 +284,19 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error updating todo:", error);
     }
   }
-
   // Render todos based on filter
   function renderTodos() {
     todosContainer.innerHTML = "";
 
-    let filteredTodos = todos;
+    // Sort todos by priority first
+    let filteredTodos = [...todos];
+    filteredTodos.sort((a, b) => (a.priority || 0) - (b.priority || 0));
 
+    // Then apply filter
     if (currentFilter === "pending") {
-      filteredTodos = todos.filter((todo) => !todo.completed);
+      filteredTodos = filteredTodos.filter((todo) => !todo.completed);
     } else if (currentFilter === "completed") {
-      filteredTodos = todos.filter((todo) => todo.completed);
+      filteredTodos = filteredTodos.filter((todo) => todo.completed);
     }
 
     // Show/hide empty state
@@ -233,6 +318,19 @@ document.addEventListener("DOMContentLoaded", () => {
       todoElement.querySelector(".todo-description").textContent =
         todo.description || "No description";
 
+      // Add image if exists
+      if (todo.image) {
+        const imageContainer = todoElement.querySelector(
+          ".todo-image-container"
+        );
+        const img = document.createElement("img");
+        img.src = todo.image;
+        img.alt = todo.title;
+        img.className = "todo-image";
+        img.addEventListener("click", () => openImageModal(todo.image));
+        imageContainer.appendChild(img);
+      }
+
       const toggleBtn = todoElement.querySelector(".toggle-btn");
       toggleBtn.title = todo.completed ? "Mark Pending" : "Mark Complete";
       toggleBtn.querySelector("i").className = todo.completed
@@ -249,7 +347,85 @@ document.addEventListener("DOMContentLoaded", () => {
         .querySelector(".delete-btn")
         .addEventListener("click", () => deleteTodo(todo.id));
 
+      // Add priority button event listeners
+      todoElement
+        .querySelector(".move-up-btn")
+        .addEventListener("click", () => moveTodoUp(todo.id));
+      todoElement
+        .querySelector(".move-down-btn")
+        .addEventListener("click", () => moveTodoDown(todo.id));
+
       todosContainer.appendChild(todoElement);
     });
+  }
+
+  // Move todo up in priority
+  async function moveTodoUp(id) {
+    try {
+      const response = await fetch(`/api/todos/${id}/move-up`, {
+        method: "PUT",
+      });
+
+      todos = await response.json();
+      renderTodos();
+    } catch (error) {
+      console.error("Error moving todo up:", error);
+    }
+  }
+
+  // Move todo down in priority
+  async function moveTodoDown(id) {
+    try {
+      const response = await fetch(`/api/todos/${id}/move-down`, {
+        method: "PUT",
+      });
+
+      todos = await response.json();
+      renderTodos();
+    } catch (error) {
+      console.error("Error moving todo down:", error);
+    }
+  }
+  // Close image modal
+  imageClose.addEventListener("click", () => {
+    imageModal.style.display = "none";
+    overlay.classList.remove("visible");
+    setTimeout(() => overlay.classList.add("hidden"), 300);
+  });
+
+  // Image preview for add form
+  imageInput.addEventListener("change", function () {
+    previewImage(this, imagePreview);
+  });
+
+  // Image preview for edit form
+  editImageInput.addEventListener("change", function () {
+    previewImage(this, editImagePreview);
+  });
+  // Preview selected image
+  function previewImage(input, previewElement) {
+    previewElement.innerHTML = "";
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        const img = document.createElement("img");
+        img.src = e.target.result;
+        previewElement.appendChild(img);
+      };
+
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  function openImageModal(imageSrc) {
+    modalImage.src = imageSrc;
+    imageModal.style.display = "block";
+
+    // Add this line to make the modal visible
+    setTimeout(() => imageModal.classList.add("visible"), 10);
+
+    overlay.classList.remove("hidden");
+    setTimeout(() => overlay.classList.add("visible"), 10);
   }
 });
