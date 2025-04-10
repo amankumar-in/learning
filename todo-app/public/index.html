@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo App</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        margin: 0;
+        padding: 20px;
+        text-align: center;
+      }
+      #connection-test {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #f0f0f0;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Todo App</h1>
+    <p>Initial setup for our Todo application</p>
+
+    <div id="connection-test">Testing backend connection...</div>
+
+    <script>
+      // Test the backend connection
+      fetch("/api/test")
+        .then((response) => response.json())
+        .then((data) => {
+          document.getElementById("connection-test").textContent = data.message;
+          document.getElementById("connection-test").style.backgroundColor =
+            "#d4edda";
+        })
+        .catch((error) => {
+          document.getElementById("connection-test").textContent =
+            "Error connecting to backend";
+          document.getElementById("connection-test").style.backgroundColor =
+            "#f8d7da";
+          console.error("Error:", error);
+        });
+    </script>
+  </body>
+</html>
